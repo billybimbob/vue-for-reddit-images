@@ -6,10 +6,11 @@ const snoowrap = require('snoowrap');
 
 
 const imageExts = new Set();
-["jpeg", "jpg", "png", "gif"].forEach(ext => imageExts.add(ext));
+["jpeg", "jpg", "png", "gif", 'tiff', 'bmp'].forEach(ext => imageExts.add(ext));
 
 const getExtension = (filename) => (
     filename
+        .split('?')[0]
         .slice(filename.lastIndexOf(".")+1)
         .toLowerCase()
 )
@@ -38,7 +39,7 @@ const imagePosts = async (amount=10, perFetch=15) => {
 
     let tries = 0;
     const maxTries = 5;
-    const added = cache.splice(0, cache.length)
+    const added = cache.splice(0, cache.length) //clear cache and add
         .concat(filterImages());
 
     while(added.length < amount && ++tries < maxTries) {
@@ -47,10 +48,9 @@ const imagePosts = async (amount=10, perFetch=15) => {
         added.push(...filterImages());
     }
     
-    const cachePoint = amount - added.length;
-    if (cachePoint) {
-        const newCache = added.splice(cachePoint); //modifies added    
-        cache.push(...newCache);
+    const cachePoint = amount - added.length; //negative or zero
+    if (cachePoint) { //modifies added 
+        cache.push(...added.splice(cachePoint));
     }
 
     return added;
@@ -60,11 +60,9 @@ const getPosts = async (subreddit, order='top', options={}) => {
     const { limit=10 } = options;
     const orderFunct = `get${order.charAt(0).toUpperCase()}${order.slice(1)}`;
     
-    if (subreddit && !fetchStream) //don't fetch initially
-        fetchStream = await r.getSubreddit(subreddit)[orderFunct]({...options, limit: 0});
-
-    fetchStream = await fetchStream
-        .fetchMore({amount: 15, skipReplies: true, append: false});
+    fetchStream = await (subreddit && !fetchStream
+        ? r.getSubreddit(subreddit)[orderFunct](options)
+        : fetchStream.fetchMore({amount: limit, skipReplies: true, append: false}));
 
     return await imagePosts(limit);
 }
