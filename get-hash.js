@@ -9,22 +9,29 @@ const rl = readline.createInterface({
     output: process.stdout
 })
 
-const getLine = async () => {
+main();
+
+
+async function waitQuestion(prompt) {
     const lineGen = (async function* () {
-        for await (const line of rl) {
+        for await (const line of rl)
             yield line;
-        }
     })();
+
+    rl.setPrompt(prompt);
+    rl.prompt();
     return (await lineGen.next()).value;
 }
 
-const main = async () => {
-    console.log('Enter in the word to hash: ');
-    const word = await getLine();
-    
-    const encrypted = AES.encrypt(word, secrets.clientId);
-    console.log(`Encrypted word is ${encrypted}`);
-    process.exit(0);
+function main() {
+    (async () => {
+        const word = await waitQuestion('Enter in the word to hash: ');
+        const encrypted = AES.encrypt(word, secrets.clientId);
+        console.log(`Encrypted word is ${encrypted}`);
+    })()
+        .then(() => process.exit(0))
+        .catch((error) => {
+            console.error(error);
+            process.exit(1)
+        });
 }
-
-main();

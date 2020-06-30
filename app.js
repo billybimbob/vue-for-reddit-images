@@ -4,7 +4,6 @@ var app = new Vue({
     data: {
         message: "Test drawing",
         painting: false,
-        canvas: null,
         ctx: null
     },
     methods: {
@@ -12,10 +11,12 @@ var app = new Vue({
             this.painting = true;
             this.draw(event);
         },
+
         finishPaint() {
             this.painting = false;
             this.ctx.beginPath();
         },
+
         draw(event) {
             if (!this.painting) return;
 
@@ -30,10 +31,10 @@ var app = new Vue({
         }
     },
     mounted() {
-        this.canvas = document.getElementById('canvas');
-        this.ctx = canvas.getContext('2d');
+        let canvas = document.getElementById('canvas');
+        canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth;
 
-        this.canvas.height = window.innerHeight;
-        this.canvas.width = window.innerWidth;
+        this.ctx = canvas.getContext('2d');
     }
 })
