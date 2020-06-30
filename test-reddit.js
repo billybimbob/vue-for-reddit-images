@@ -5,7 +5,9 @@ const secrets = require('./secrets.json');
 const snoowrap = require('snoowrap');
 
 
-const imageExts = ["jpeg", "jpg", "png", "gif"];
+const imageExts = new Set();
+["jpeg", "jpg", "png", "gif"].forEach(ext => imageExts.add(ext));
+
 const getExtension = (filename) => (
     filename
         .slice(filename.lastIndexOf(".")+1)
@@ -25,18 +27,67 @@ const getRequester = () => {
 }
 
 
-const r = getRequester();    
+const r = getRequester();
+const cache = []; 
+let fetchStream = undefined;
 
-const printTopPosts = async (subreddit) => {
-    const posts = await r.getSubreddit(subreddit)
-        .getTop({limit: 10})
-        .fetchMore({amount: 10, skipReplies: true, append: true});
 
-    posts.filter(post => imageExts.includes( getExtension(post.url) ))
-        .forEach((post, i) => {
-            //console.log(getExtension(post.url));
-            console.log(`${i}. ${post.title}: ${post.url}`);
-        });
+const imagePosts = async (amount=10, perFetch=15) => {
+    const filterImages = () => fetchStream
+        .filter(post => imageExts.has(getExtension(post.url)));
+
+    let tries = 0;
+    const maxTries = 5;
+    const added = cache.splice(0, cache.length)
+        .concat(filterImages());
+
+    while(added.length < amount && ++tries < maxTries) {
+        fetchStream = await fetchStream
+            .fetchMore({amount: perFetch, skipReplies: true, append: false});
+        added.push(...filterImages());
+    }
+    
+    const cachePoint = amount - added.length;
+    if (cachePoint) {
+        const newCache = added.splice(cachePoint); //modifies added    
+        cache.push(...newCache);
+    }
+
+    return added;
+}
+
+const getPosts = async (subreddit, order='top', options={}) => {
+    const { limit=10 } = options;
+    const orderFunct = `get${order.charAt(0).toUpperCase()}${order.slice(1)}`;
+    
+    if (subreddit && !fetchStream) //don't fetch initially
+        fetchStream = await r.getSubreddit(subreddit)[orderFunct]({...options, limit: 0});
+
+    fetchStream = await fetchStream
+        .fetchMore({amount: 15, skipReplies: true, append: false});
+
+    return await imagePosts(limit);
+}
+
+
+const printPosts = async (...getArgs) => {
+    const posts = await getPosts(...getArgs);
+
+    console.log('Fetch Stream:')
+    fetchStream.forEach((post, i) => {
+        console.log(`${i}. ${post.title}: ${post.url}`);
+    });
+    
+    console.log('Posts:')
+    posts.forEach((post, i) => {
+        console.log(`${i}. ${post.title}: ${post.url}`);
+    });
+
+    console.log('Cache:')
+    cache.forEach((post, i) => {
+        console.log(`${i}. ${post.title}: ${post.url}`);
+    });
 };
 
-printTopPosts('pics');
+printPosts('hearthstone', 'top', {limit: 5})
+    //.then(() => printPosts('pics', 'top', {limit: 10}));
