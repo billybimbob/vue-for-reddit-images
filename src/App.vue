@@ -2,18 +2,21 @@
   <div id="app">
     <SubTitle/>
     <SideBar/>
+    <RedditImages/>
   </div>
 </template>
 
 <script>
-import SubTitle from './components/SubTitle.vue'
-import SideBar from './components/SideBar.vue'
+import SubTitle from './components/SubTitle'
+import SideBar from './components/SideBar'
+import RedditImages from './components/RedditImages';
 
 export default {
   name: 'App',
   components: {
     SubTitle,
     SideBar,
+    RedditImages
   }
 }
 </script>
