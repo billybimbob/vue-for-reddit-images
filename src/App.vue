@@ -2,7 +2,7 @@
   <div id="app">
     <SubTitle/>
     <SideBar/>
-    <RedditImages/>
+    <RedditImages subreddit="pics" order="hot" :options="{limit: 15}"/>
   </div>
 </template>
 
