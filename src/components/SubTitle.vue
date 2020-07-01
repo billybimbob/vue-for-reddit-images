@@ -1,7 +1,7 @@
 <template>
 
-<div class="subNameDiv">
-    <subNameTitle>Current Subreddit</subNameTitle>
+<div class="SubNameDiv">
+    <SubNameTitle>Current Subreddit</SubNameTitle>
 </div>
 
 </template>
@@ -14,13 +14,13 @@ export default {
 </script>
 
 
-<style scoped>
-.subNameDiv {
+<style>
+.SubNameDiv {
     text-align: right;
     padding: 0px 25px;
 }
 
-subNameTitle {
+SubNameTitle {
     font-size: 32px;
 }
 

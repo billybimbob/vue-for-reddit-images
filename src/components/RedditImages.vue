@@ -6,7 +6,7 @@
                 {{ post.title }}
                 <img :src="post.url"/>
             </li>
-        </ul> 
+        </ul>
     </div>
 </template>
 
@@ -62,7 +62,7 @@ export default {
             const password = CryptoJS.AES
                 .decrypt(secrets.password, secrets.clientId)
                 .toString(CryptoJS.enc.Utf8);
-                
+
             return new snoowrap({...secrets, username, password});
         },
 
@@ -80,9 +80,9 @@ export default {
                     .fetchMore({amount, skipReplies: true, append: false});
                 added.push(...filterImages());
             }
-    
+
             const cachePoint = amount - added.length; //negative or zero
-            if (cachePoint) { //modifies added 
+            if (cachePoint) { //modifies added
                 this.cache.push(...added.splice(cachePoint));
             }
 
@@ -92,7 +92,7 @@ export default {
         async getPosts(subreddit, order='top', options={}) {
             const { limit=10 } = options;
             const orderFunct = `get${order.charAt(0).toUpperCase()}${order.slice(1)}`;
-            
+
             this.fetchStream = await //(subreddit && !this.fetchStream
                 this.r.getSubreddit(subreddit)[orderFunct](options)
                 //: this.fetchStream.fetchMore({amount: limit, skipReplies: true, append: false}));
@@ -114,7 +114,7 @@ export default {
 
     },
 
-    
+
 }
 </script>
 
