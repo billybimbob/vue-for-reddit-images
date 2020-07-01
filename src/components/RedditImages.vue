@@ -29,13 +29,14 @@ const getExtension = (filename) => (
 export default {
     data() {
         return {
-            r: this.getRequester(),
             posts: [],
             cache: [],
-            fetchStream: undefined
+            stream: {
+                count: 0,
+                after: null
+            }
         }
     },
-
     props: {
         subreddit: {
             type: String,
@@ -48,8 +49,16 @@ export default {
         options: {
             type: Object,
             default() {
-                return {};
+                return {limit: 10};
             }
+        }
+    },
+    watch: {
+        $props: {
+            handler() {
+                this.getPosts().then(newPosts => this.posts = newPosts);
+            },
+            immediate: true
         }
     },
 
@@ -66,8 +75,30 @@ export default {
             return new snoowrap({...secrets, username, password});
         },
 
-        async imagePosts(amount=10) {
-            const filterImages = () => this.fetchStream
+        async getPosts() {
+            const { limit } = this.options;
+            const subRef = this.getRequester().getSubreddit(this.subreddit);
+            const orderFunct = "get"
+                .concat(this.order.charAt(0).toUpperCase())
+                .concat(this.order.slice(1).toLowerCase());
+
+            const fetcher = async () => { //modifies stream data
+                const fetched = await subRef[orderFunct]({ //adds after and count args
+                    ...this.options, ...(this.stream.count && this.stream)
+                })
+                //console.log(fetched);
+                this.stream.count += limit;
+                this.stream.after = fetched._query.after;
+                return fetched;
+            }
+
+            return await this.imagePosts(limit, fetcher);
+        },
+
+        async imagePosts(limit, fetcher) {
+
+            let fetched = await fetcher();
+            const filterImages = () => fetched
                 .filter(post => imageExts.has(getExtension(post.url)));
 
             let tries = 0;
@@ -75,43 +106,18 @@ export default {
             const added = this.cache.splice(0, this.cache.length) //clear cache and add
                 .concat(filterImages());
 
-            while(added.length < amount && ++tries < maxTries) {
-                this.fetchStream = await this.fetchStream
-                    .fetchMore({amount, skipReplies: true, append: false});
+            while(added.length < limit && ++tries < maxTries) {
+                fetched = await fetcher();
                 added.push(...filterImages());
             }
     
-            const cachePoint = amount - added.length; //negative or zero
+            const cachePoint = limit - added.length; //negative or zero
             if (cachePoint) { //modifies added 
                 this.cache.push(...added.splice(cachePoint));
             }
 
             return added
-        },
-
-        async getPosts(subreddit, order='top', options={}) {
-            const { limit=10 } = options;
-            const orderFunct = `get${order.charAt(0).toUpperCase()}${order.slice(1)}`;
-            
-            this.fetchStream = await //(subreddit && !this.fetchStream
-                this.r.getSubreddit(subreddit)[orderFunct](options)
-                //: this.fetchStream.fetchMore({amount: limit, skipReplies: true, append: false}));
-
-            console.log('getting stream', Object.prototype.toString.apply(this.fetchStream));
-
-            this.fetchStream.forEach((post => {
-                console.log(post.title);
-            }));
-
-            return await this.imagePosts(limit);
         }
-    },
-
-    mounted() {
-        console.log('getting posts')
-        this.getPosts(this.subreddit, this.order, this.options)
-            .then(fetched => this.posts = fetched);
-
     },
 
     
