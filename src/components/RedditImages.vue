@@ -31,7 +31,7 @@ export default {
     data() {
         return {
             runCount: 0,
-            stream: this.streamStart(),
+            stream: {count: 0, after: null},
             posts: [],
             cache: []
         }
@@ -50,6 +50,10 @@ export default {
             default() {
                 return {limit: 10};
             }
+        },
+        fetchmod: {
+            type: Number,
+            default: 5
         }
     },
     computed: { //watch multiple prop vals
@@ -68,8 +72,12 @@ export default {
                     const {subreddit: oldSub, order: oldOrder} = oldProps;
                     const {subreddit: newSub, order: newOrder} = newProps;
 
-                    if ((oldSub!==newSub) || (oldOrder!==newOrder))
-                        this.stream = this.streamStart();
+                    if ((oldSub!==newSub) || (oldOrder!==newOrder)) {
+                        //console.log('reseting')
+                        this.posts = [];
+                        this.cache = [];
+                        this.stream = {count: 0, after: null};
+                    }
                 }
 
                 this.setPosts();
@@ -78,10 +86,6 @@ export default {
     },
 
     methods: {
-        streamStart() {
-            return {count: 0, after: null}
-        },
-
         getRequester() {
             const username = CryptoJS.AES
                 .decrypt(secrets.username, secrets.clientId)
@@ -96,9 +100,10 @@ export default {
 
         async getPosts() {
             const runId = this.runCount;
-            const limit = this.options.limit - this.posts.length;
+            const limit = this.options.limit - this.posts.length + this.fetchmod;
 
-            //console.log('getting request')
+            if (limit <= 0) return;
+
             const subRef = this.getRequester().getSubreddit(this.subreddit);
             const orderFunct = "get"
                 .concat(this.order.charAt(0).toUpperCase())
@@ -106,6 +111,7 @@ export default {
 
             let { count, after } = this.stream;
             const fetcher = async () => {
+                console.log('requesting')
                 const fetched = await subRef[orderFunct]({ //adds after and count args
                     ...this.options, 
                     limit,
@@ -117,29 +123,26 @@ export default {
                 return fetched;
             }
 
-            const images = await this.imagePosts(limit, fetcher);
-
-           if (runId === this.runCount) { //race condition?
+            const images = await this.fetchImages(limit, fetcher);
+            if (runId === this.runCount) { //race condition?
                 this.stream = {count, after};
                 return images;
-            } else {
-                return undefined;
             }
+            // else undefined
         },
 
-        async imagePosts(limit, fetcher) {
-            let fetched = await fetcher();
-            const filterImages = () => fetched
-                .filter(post => imageExts.has(getExtension(post.url)));
+        async fetchImages(limit, fetcher) {
+            const added = this.cache.splice(0, this.cache.length); //clear cache and add
+
+            const filterImages = posts =>
+                posts.filter(post => imageExts.has(getExtension(post.url)));
 
             let tries = 0;
             const maxTries = 5;
-            const added = this.cache.splice(0, this.cache.length) //clear cache and add
-                .concat(filterImages());
-
             while(added.length < limit && ++tries < maxTries) {
-                fetched = await fetcher();
-                added.push(...filterImages());
+                const fetched = await fetcher();
+                added.push(...filterImages(fetched));
+                //console.log(`${added.length} vs ${limit}`)
             }
 
             const cachePoint = limit - added.length; //negative or zero
@@ -158,7 +161,7 @@ export default {
             this.getPosts()
                 .then(newPosts => {
                     if (newPosts) //can be undefined
-                        this.posts = newPosts; })
+                        this.posts.push(...newPosts); })
                 .catch(error => console.log(error));
 
         }, 0, {leading: false});
