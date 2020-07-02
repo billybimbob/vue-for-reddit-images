@@ -1,6 +1,7 @@
 <template>
     <div>
         <h2>Posts Should Appear Here:</h2>
+        <h3>Showing {{ posts.length }} images</h3>
         <ul class="image-grid" v-if="posts.length!==0">
             <li class="small-tile" v-for="post in posts" :key="post.url">
                 {{ post.title }}
@@ -57,6 +58,10 @@ export default {
         }
     },
     computed: { //watch multiple prop vals
+        resetProps() {
+            const {subreddit, order} = this;
+            return {subreddit, order};
+        },
         filterProps() {
             const {subreddit, order, options} = this;
             return {subreddit, order, options};
@@ -64,24 +69,19 @@ export default {
     },
 
     watch: {
-        filterProps: { //not computed since async
+        resetProps() {
+            console.log('reseting')
+            this.posts = [];
+            this.cache = [];
+            this.stream = {count: 0, after: null};
+        },
+        filterProps: { //should run after reset
+            handler() {
+                console.log('updating post')
+                this.updatePosts();
+            },
             immediate: true,
-            deep: true,
-            handler(newProps, oldProps) {
-                if (oldProps) { //initial render will have no old
-                    const {subreddit: oldSub, order: oldOrder} = oldProps;
-                    const {subreddit: newSub, order: newOrder} = newProps;
-
-                    if ((oldSub!==newSub) || (oldOrder!==newOrder)) {
-                        //console.log('reseting')
-                        this.posts = [];
-                        this.cache = [];
-                        this.stream = {count: 0, after: null};
-                    }
-                }
-
-                this.setPosts();
-            }
+            deep: true
         }
     },
 
@@ -98,11 +98,37 @@ export default {
             return new snoowrap({...secrets, username, password});
         },
 
-        async getPosts() {
-            const runId = this.runCount;
-            const limit = this.options.limit - this.posts.length + this.fetchmod;
+        async fetchImages(target, fetchPosts) {
+            const added = this.cache.splice(0, this.cache.length); //clear cache and add
 
-            if (limit <= 0) return;
+            const filterImages = posts =>
+                posts.filter(post => imageExts.has(getExtension(post.url)));
+
+            let tries = 0;
+            const maxTries = 5;
+            while(added.length < target && ++tries < maxTries) {
+                const fetched = await fetchPosts();
+                added.push(...filterImages(fetched));
+                //console.log(`${added.length} vs ${limit}`)
+            }
+
+            const cachePoint = target - added.length; //negative or zero
+            if (cachePoint) { //modifies added
+                this.cache.push(...added.splice(cachePoint));
+            }
+
+            return added
+        },
+
+        async setPosts() {
+            const runId = this.runCount;
+            const target = this.options.limit - this.posts.length;
+            const limit  = target + this.fetchmod;
+
+            if (target < 0) //modifies posts immediately, maybe check runId?
+                this.cache.shift( this.posts.splice(target) );
+            if (target <= 0)
+                return;
 
             const subRef = this.getRequester().getSubreddit(this.subreddit);
             const orderFunct = "get"
@@ -110,8 +136,9 @@ export default {
                 .concat(this.order.slice(1).toLowerCase());
 
             let { count, after } = this.stream;
-            const fetcher = async () => {
+            const fetchPosts = async () => {
                 console.log('requesting')
+
                 const fetched = await subRef[orderFunct]({ //adds after and count args
                     ...this.options, 
                     limit,
@@ -123,45 +150,20 @@ export default {
                 return fetched;
             }
 
-            const images = await this.fetchImages(limit, fetcher);
+            const images = await this.fetchImages(target, fetchPosts);
+
             if (runId === this.runCount) { //race condition?
                 this.stream = {count, after};
-                return images;
+                this.posts.push(...images);
             }
-            // else undefined
-        },
-
-        async fetchImages(limit, fetcher) {
-            const added = this.cache.splice(0, this.cache.length); //clear cache and add
-
-            const filterImages = posts =>
-                posts.filter(post => imageExts.has(getExtension(post.url)));
-
-            let tries = 0;
-            const maxTries = 5;
-            while(added.length < limit && ++tries < maxTries) {
-                const fetched = await fetcher();
-                added.push(...filterImages(fetched));
-                //console.log(`${added.length} vs ${limit}`)
-            }
-
-            const cachePoint = limit - added.length; //negative or zero
-            if (cachePoint) { //modifies added
-                this.cache.push(...added.splice(cachePoint));
-            }
-
-            return added
         }
     },
 
     beforeCreate() {
-        this.setPosts = throttle(() => { //prevent excess calls
+        this.updatePosts = throttle(() => { //prevent excess calls
             //console.log('fetching')
             this.runCount++;
-            this.getPosts()
-                .then(newPosts => {
-                    if (newPosts) //can be undefined
-                        this.posts.push(...newPosts); })
+            this.setPosts()
                 .catch(error => console.log(error));
 
         }, 0, {leading: false});
