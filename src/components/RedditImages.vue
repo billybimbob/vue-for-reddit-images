@@ -6,7 +6,7 @@
                 {{ post.title }}
                 <img :src="post.url"/>
             </li>
-        </ul> 
+        </ul>
     </div>
 </template>
 
@@ -90,7 +90,7 @@ export default {
             const password = CryptoJS.AES
                 .decrypt(secrets.password, secrets.clientId)
                 .toString(CryptoJS.enc.Utf8);
-                
+
             return new snoowrap({...secrets, username, password});
         },
 
@@ -141,9 +141,9 @@ export default {
                 fetched = await fetcher();
                 added.push(...filterImages());
             }
-    
+
             const cachePoint = limit - added.length; //negative or zero
-            if (cachePoint) { //modifies added 
+            if (cachePoint) { //modifies added
                 this.cache.push(...added.splice(cachePoint));
             }
 

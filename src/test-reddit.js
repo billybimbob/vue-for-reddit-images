@@ -1,5 +1,7 @@
 'use strict';
 
+
+
 const CryptoJS = require("crypto-js");
 const secrets = require('./secrets.json');
 const snoowrap = require('snoowrap');
@@ -23,13 +25,13 @@ const getRequester = () => {
     const password = CryptoJS.AES
         .decrypt(secrets.password, secrets.clientId)
         .toString(CryptoJS.enc.Utf8);
-        
+
     return new snoowrap({...secrets, username, password});
 }
 
 
 const r = getRequester();
-const cache = []; 
+const cache = [];
 let fetchStream = undefined;
 
 
@@ -47,9 +49,9 @@ const imagePosts = async (amount=10, perFetch=15) => {
             .fetchMore({amount: perFetch, skipReplies: true, append: false});
         added.push(...filterImages());
     }
-    
+
     const cachePoint = amount - added.length; //negative or zero
-    if (cachePoint) { //modifies added 
+    if (cachePoint) { //modifies added
         cache.push(...added.splice(cachePoint));
     }
 
@@ -59,7 +61,7 @@ const imagePosts = async (amount=10, perFetch=15) => {
 const getPosts = async (subreddit, order='top', options={}) => {
     const { limit=10 } = options;
     const orderFunct = `get${order.charAt(0).toUpperCase()}${order.slice(1)}`;
-    
+
     fetchStream = await (subreddit && !fetchStream
         ? r.getSubreddit(subreddit)[orderFunct](options)
         : fetchStream.fetchMore({amount: limit, skipReplies: true, append: false}));
@@ -75,7 +77,7 @@ const printPosts = async (...getArgs) => {
     fetchStream.forEach((post, i) => {
         console.log(`${i}. ${post.title}: ${post.url}`);
     });
-    
+
     console.log('Posts:')
     posts.forEach((post, i) => {
         console.log(`${i}. ${post.title}: ${post.url}`);
