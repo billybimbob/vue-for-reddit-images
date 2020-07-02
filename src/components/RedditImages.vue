@@ -1,8 +1,8 @@
 <template>
     <div>
         <h2>Posts Should Appear Here:</h2>
-        <ul v-if="posts.length!==0">
-            <li v-for="post in posts" :key="post.url">
+        <ul class="image-grid" v-if="posts.length!==0">
+            <li class="small-tile" v-for="post in posts" :key="post.url">
                 {{ post.title }}
                 <img :src="post.url"/>
             </li>
@@ -14,6 +14,7 @@
 <script>
 import CryptoJS from 'crypto-js';
 import snoowrap from 'snoowrap';
+import throttle from 'lodash.throttle';
 import secrets from '../secrets.json';
 
 const imageExts = new Set();
@@ -29,12 +30,10 @@ const getExtension = (filename) => (
 export default {
     data() {
         return {
+            runCount: 0,
+            stream: this.streamStart(),
             posts: [],
-            cache: [],
-            stream: {
-                count: 0,
-                after: null
-            }
+            cache: []
         }
     },
     props: {
@@ -53,16 +52,36 @@ export default {
             }
         }
     },
+    computed: { //watch multiple prop vals
+        filterProps() {
+            const {subreddit, order, options} = this;
+            return {subreddit, order, options};
+        }
+    },
+
     watch: {
-        $props: {
-            handler() {
-                this.getPosts().then(newPosts => this.posts = newPosts);
-            },
-            immediate: true
+        filterProps: { //not computed since async
+            immediate: true,
+            deep: true,
+            handler(newProps, oldProps) {
+                if (oldProps) { //initial render will have no old
+                    const {subreddit: oldSub, order: oldOrder} = oldProps;
+                    const {subreddit: newSub, order: newOrder} = newProps;
+
+                    if ((oldSub!==newSub) || (oldOrder!==newOrder))
+                        this.stream = this.streamStart();
+                }
+
+                this.setPosts();
+            }
         }
     },
 
     methods: {
+        streamStart() {
+            return {count: 0, after: null}
+        },
+
         getRequester() {
             const username = CryptoJS.AES
                 .decrypt(secrets.username, secrets.clientId)
@@ -76,27 +95,39 @@ export default {
         },
 
         async getPosts() {
-            const { limit } = this.options;
+            const runId = this.runCount;
+            const limit = this.options.limit - this.posts.length;
+
+            //console.log('getting request')
             const subRef = this.getRequester().getSubreddit(this.subreddit);
             const orderFunct = "get"
                 .concat(this.order.charAt(0).toUpperCase())
                 .concat(this.order.slice(1).toLowerCase());
 
-            const fetcher = async () => { //modifies stream data
+            let { count, after } = this.stream;
+            const fetcher = async () => {
                 const fetched = await subRef[orderFunct]({ //adds after and count args
-                    ...this.options, ...(this.stream.count && this.stream)
+                    ...this.options, 
+                    limit,
+                    ...(count && {count, after})
                 })
                 //console.log(fetched);
-                this.stream.count += limit;
-                this.stream.after = fetched._query.after;
+                count += limit;
+                after = fetched._query.after;
                 return fetched;
             }
 
-            return await this.imagePosts(limit, fetcher);
+            const images = await this.imagePosts(limit, fetcher);
+
+           if (runId === this.runCount) { //race condition?
+                this.stream = {count, after};
+                return images;
+            } else {
+                return undefined;
+            }
         },
 
         async imagePosts(limit, fetcher) {
-
             let fetched = await fetcher();
             const filterImages = () => fetched
                 .filter(post => imageExts.has(getExtension(post.url)));
@@ -120,6 +151,18 @@ export default {
         }
     },
 
+    beforeCreate() {
+        this.setPosts = throttle(() => { //prevent excess calls
+            //console.log('fetching')
+            this.runCount++;
+            this.getPosts()
+                .then(newPosts => {
+                    if (newPosts) //can be undefined
+                        this.posts = newPosts; })
+                .catch(error => console.log(error));
+
+        }, 0, {leading: false});
+    }
     
 }
 </script>
