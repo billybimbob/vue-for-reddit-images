@@ -20,7 +20,6 @@ export default {
     SideBar,
     RedditImages,
     SubGoTo
-
   }
 }
 </script>

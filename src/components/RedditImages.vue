@@ -28,7 +28,6 @@ const getExtension = (filename) => (
         .toLowerCase()
 )
 
-var subName = 'hearthstone';
 
 
 export default {
@@ -134,6 +133,7 @@ export default {
                 return;
 
             const subRef = this.getRequester().getSubreddit(this.subreddit);
+            //console.log("sub name: " + this.subreddit +" order: " + this.order +" limit: " + this.limit);
             const orderFunct = "get"
                 .concat(this.order.charAt(0).toUpperCase())
                 .concat(this.order.slice(1).toLowerCase());
