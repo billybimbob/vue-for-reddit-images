@@ -1,10 +1,9 @@
 <template>
-    <div>
+    <div class="images">
         <h2>Posts Should Appear Here:</h2>
         <h3>Showing {{ posts.length }} images</h3>
         <ul class="image-grid" v-if="posts.length!==0">
             <li class="small-tile" v-for="post in posts" :key="post.url">
-                {{ post.title }}
                 <img :src="post.url"/>
             </li>
         </ul>
@@ -159,14 +158,12 @@ export default {
 
             //sync point, changes data values, race condition?
             this.checkedChange(() => {
+                this.cache.splice(0); //clear cache
                 const cachePoint = target - images.length; //negative or zero
-
-                this.cache.splice(0); 
                 if (cachePoint) {
-                    this.cache.push(
-                        ...images.splice(cachePoint)
-                    );
+                    this.cache.push( ...images.splice(cachePoint) );
                 }
+
                 this.stream = {count, after};
                 this.posts.push(...images);
 
@@ -182,6 +179,7 @@ export default {
                 .catch(error => console.log(error));
         }, 0, {leading: false});
     },
+
     created() {
         this.requester = this.getRequester();
     }
@@ -191,5 +189,53 @@ export default {
 
 
 <style scoped>
+.images {
+    width: 91%;
+    float: right;
+}
 
+.image-grid {
+    list-style: none;
+    line-height: 0;   
+    -webkit-column-count: 5;
+    -webkit-column-gap:   0px;
+    -moz-column-count:    5;
+    -moz-column-gap:      0px;
+    column-count:         5;
+    column-gap:           0px; 
+}
+
+.small-tile img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+@media (max-width: 1200px) {
+    .image-grid {
+        -moz-column-count:    4;
+        -webkit-column-count: 4;
+        column-count:         4;
+    }
+}
+@media (max-width: 1000px) {
+    .image-grid {
+        -moz-column-count:    3;
+        -webkit-column-count: 3;
+        column-count:         3;
+    }
+}
+@media (max-width: 800px) {
+    .image-grid {
+        -moz-column-count:    2;
+        -webkit-column-count: 2;
+        column-count:         2;
+    }
+}
+@media (max-width: 400px) {
+    .image-grid {
+        -moz-column-count:    1;
+        -webkit-column-count: 1;
+        column-count:         1;
+    }
+}
 </style>
