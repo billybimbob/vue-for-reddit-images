@@ -3,7 +3,7 @@
     <SubGoTo/>
     <SubTitle/>
     <SideBar/>
-    <RedditImages subreddit="pics" order="top" :options="{limit: 10}"/>
+    <RedditImages subreddit="pics" order="top" :options="{limit: 20}"/>
   </div>
 </template>
 

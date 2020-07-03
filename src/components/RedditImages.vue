@@ -1,10 +1,9 @@
 <template>
-    <div>
+    <div class="images">
         <h2>Posts Should Appear Here:</h2>
         <h3>Showing {{ posts.length }} images</h3>
         <ul class="image-grid" v-if="posts.length!==0">
             <li class="small-tile" v-for="post in posts" :key="post.url">
-                {{ post.title }}
                 <img :src="post.url"/>
             </li>
         </ul>
@@ -28,18 +27,17 @@ const getExtension = (filename) => (
         .toLowerCase()
 )
 
-
-
 export default {
     data() {
         return {
             runCount: 0,
+            requester: null,
             stream: {count: 0, after: null},
             posts: [],
             cache: []
         }
     },
-     props: {
+    props: {
         subreddit: {
             type: String,
             default: 'pics'
@@ -100,65 +98,76 @@ export default {
             return new snoowrap({...secrets, username, password});
         },
 
-        async fetchImages(target, fetchPosts) {
-            const added = this.cache.splice(0, this.cache.length); //clear cache and add
+        checkedChange(changeCallback, {runId}) {
+            if (runId === this.runCount)
+                changeCallback();
+        },
+
+        async fetchImages(fetchPosts, {target=1}) {
+            const images = [...this.cache]; //copy cache
 
             const filterImages = posts =>
                 posts.filter(post => imageExts.has(getExtension(post.url)));
 
             let tries = 0;
             const maxTries = 5;
-            while(added.length < target && ++tries < maxTries) {
+            while(images.length < target && tries++ < maxTries) {
                 const fetched = await fetchPosts();
-                added.push(...filterImages(fetched));
-                //console.log(`${added.length} vs ${limit}`)
+                images.push(...filterImages(fetched));
+                //console.log(`${images.length} vs ${limit}`)
             }
 
-            const cachePoint = target - added.length; //negative or zero
-            if (cachePoint) { //modifies added
-                this.cache.push(...added.splice(cachePoint));
-            }
-
-            return added
+            return images;
         },
 
-        async setPosts() {
+        async setPosts() { //modifies data values
             const runId = this.runCount;
             const target = this.options.limit - this.posts.length;
-            const limit  = target + this.fetchmod;
 
-            if (target < 0) //modifies posts immediately, maybe check runId?
-                this.cache.shift( this.posts.splice(target) );
-            if (target <= 0)
+            if (target === 0) {
                 return;
+            } else if (target < 0) {
+                this.checkedChange(() => {
+                    this.cache.unshift( ...this.posts.splice(target) );
+                }, {runId});
+                return;
+            }
 
-            const subRef = this.getRequester().getSubreddit(this.subreddit);
-            //console.log("sub name: " + this.subreddit +" order: " + this.order +" limit: " + this.limit);
+            const subRef = this.requester.getSubreddit(this.subreddit);
             const orderFunct = "get"
                 .concat(this.order.charAt(0).toUpperCase())
                 .concat(this.order.slice(1).toLowerCase());
 
+            const limit = target + this.fetchmod;
             let { count, after } = this.stream;
+
             const fetchPosts = async () => {
                 console.log('requesting')
-
-                const fetched = await subRef[orderFunct]({ //adds after and count args
+                const fetched = await subRef[orderFunct]({
                     ...this.options,
-                    limit,
-                    ...(count && {count, after})
+                    ...(count && {count, after}),
+                    limit
                 })
-                //console.log(fetched);
                 count += limit;
                 after = fetched._query.after;
+
                 return fetched;
             }
 
-            const images = await this.fetchImages(target, fetchPosts);
+            const images = await this.fetchImages(fetchPosts, {target});
 
-            if (runId === this.runCount) { //race condition?
+            //sync point, changes data values, race condition?
+            this.checkedChange(() => {
+                this.cache.splice(0); //clear cache
+                const cachePoint = target - images.length; //negative or zero
+                if (cachePoint) {
+                    this.cache.push( ...images.splice(cachePoint) );
+                }
+
                 this.stream = {count, after};
                 this.posts.push(...images);
-            }
+
+            }, {runId});
         }
     },
 
@@ -168,8 +177,11 @@ export default {
             this.runCount++;
             this.setPosts()
                 .catch(error => console.log(error));
-
         }, 0, {leading: false});
+    },
+
+    created() {
+        this.requester = this.getRequester();
     }
 
 }
@@ -177,5 +189,53 @@ export default {
 
 
 <style scoped>
+.images {
+    width: 91%;
+    float: right;
+}
 
+.image-grid {
+    list-style: none;
+    line-height: 0;
+    -webkit-column-count: 5;
+    -webkit-column-gap:   0px;
+    -moz-column-count:    5;
+    -moz-column-gap:      0px;
+    column-count:         5;
+    column-gap:           0px;
+}
+
+.small-tile img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+@media (max-width: 1200px) {
+    .image-grid {
+        -moz-column-count:    4;
+        -webkit-column-count: 4;
+        column-count:         4;
+    }
+}
+@media (max-width: 1000px) {
+    .image-grid {
+        -moz-column-count:    3;
+        -webkit-column-count: 3;
+        column-count:         3;
+    }
+}
+@media (max-width: 800px) {
+    .image-grid {
+        -moz-column-count:    2;
+        -webkit-column-count: 2;
+        column-count:         2;
+    }
+}
+@media (max-width: 400px) {
+    .image-grid {
+        -moz-column-count:    1;
+        -webkit-column-count: 1;
+        column-count:         1;
+    }
+}
 </style>
