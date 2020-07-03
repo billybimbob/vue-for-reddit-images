@@ -26,6 +26,9 @@ const getExtension = (filename) => (
         .toLowerCase()
 )
 
+var subName = 'hearthstone';
+
+
 export default {
     data() {
         return {
@@ -37,7 +40,7 @@ export default {
             }
         }
     },
-    props: {
+     props: {
         subreddit: {
             type: String,
             default: 'pics'
@@ -53,7 +56,7 @@ export default {
             }
         }
     },
-    watch: {
+        watch: {
         $props: {
             handler() {
                 this.getPosts().then(newPosts => this.posts = newPosts);
@@ -77,10 +80,15 @@ export default {
 
         async getPosts() {
             const { limit } = this.options;
-            const subRef = this.getRequester().getSubreddit(this.subreddit);
+            console.log(this.options);
+            console.log(this.order);
+            console.log(this.subreddit);
+            const subRef = this.getRequester().getSubreddit(subName);
             const orderFunct = "get"
                 .concat(this.order.charAt(0).toUpperCase())
                 .concat(this.order.slice(1).toLowerCase());
+
+
 
             const fetcher = async () => { //modifies stream data
                 const fetched = await subRef[orderFunct]({ //adds after and count args
@@ -111,7 +119,7 @@ export default {
                 added.push(...filterImages());
             }
 
-            const cachePoint = amount - added.length; //negative or zero
+            const cachePoint = limit - added.length; //negative or zero
             if (cachePoint) { //modifies added
                 this.cache.push(...added.splice(cachePoint));
             }
