@@ -1,9 +1,12 @@
 <template>
   <div id="app">
-    <SubGoTo/>
-    <SubTitle/>
+      <div class="searchdiv">
+        <input v-model="newsubname" placeholder="Enter subreddit name">
+        <button type="button" name="button" v-on:click="setSubName(newsubname)">Go to subreddit</button>
+      </div>
+    <SubTitle :subreddit="subreddit"/>
     <SideBar/>
-    <RedditImages subreddit="pics" order="top" :options="{limit: 20}"/>
+    <RedditImages :subreddit="subreddit"  order="top" :options="{limit: 5}"/>
   </div>
 </template>
 
@@ -11,17 +14,35 @@
 import SubTitle from './components/SubTitle'
 import SideBar from './components/SideBar'
 import RedditImages from './components/RedditImages'
-import SubGoTo from './components/SubGoTo'
+
 
 export default {
   name: 'App',
   components: {
     SubTitle,
     SideBar,
-    RedditImages,
-    SubGoTo
+    RedditImages
+  },
+
+  data() {
+    return {
+      subreddit: "hearthstone"
+    }
+  },
+  methods: {
+    setSubName(name)
+    {
+      console.log("old name: " + this.subreddit, " New name: " + name);
+      this.subreddit = name;
+
+    }
   }
+
+
 }
+
+
+
 </script>
 
 <style>
@@ -32,5 +53,14 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+
+
+.searchdiv {
+  align: left;
+  font-size: 20px;
+  font-family: sans-serif;
+  padding: 20px 0px;
 }
 </style>

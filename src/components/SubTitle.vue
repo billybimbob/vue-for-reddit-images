@@ -1,7 +1,7 @@
 <template>
 
 <div class="SubNameDiv">
-    <SubNameTitle>Current Subreddit</SubNameTitle>
+    <SubNameTitle>{{"/r/" + subreddit}}</SubNameTitle>
 </div>
 
 </template>
@@ -9,7 +9,16 @@
 
 <script>
 export default {
-  name: 'SubTitle'
+  name: 'SubTitle',
+
+  props:
+  {
+    subreddit:
+    {
+      type: String,
+      default: "pics"
+    }
+  }
 }
 </script>
 
@@ -21,7 +30,7 @@ export default {
 }
 
 SubNameTitle {
-    font-size: 32px;
+    font-size: 40px;
 }
 
 </style>

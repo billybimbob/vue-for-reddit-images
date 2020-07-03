@@ -1,7 +1,6 @@
 <template>
     <div class="images">
-        <h2>Posts Should Appear Here:</h2>
-        <h3>Showing {{ posts.length }} images</h3>
+        <h2>Posts Should Appear Here ({{ posts.length }}):</h2>
         <ul class="image-grid" v-if="posts.length!==0">
             <li class="small-tile" v-for="post in posts" :key="post.url">
                 <img :src="post.url"/>
