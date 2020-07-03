@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <SubGoTo/>
     <SubTitle/>
     <SideBar/>
     <RedditImages subreddit="pics" order="top" :options="{limit: 10}"/>
@@ -9,14 +10,17 @@
 <script>
 import SubTitle from './components/SubTitle'
 import SideBar from './components/SideBar'
-import RedditImages from './components/RedditImages';
+import RedditImages from './components/RedditImages'
+import SubGoTo from './components/SubGoTo'
 
 export default {
   name: 'App',
   components: {
     SubTitle,
     SideBar,
-    RedditImages
+    RedditImages,
+    SubGoTo
+
   }
 }
 </script>
