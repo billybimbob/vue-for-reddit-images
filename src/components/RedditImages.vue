@@ -1,8 +1,9 @@
 <template>
     <div>
         <h2>Posts Should Appear Here:</h2>
-        <ul v-if="posts.length!==0">
-            <li v-for="post in posts" :key="post.url">
+        <h3>Showing {{ posts.length }} images</h3>
+        <ul class="image-grid" v-if="posts.length!==0">
+            <li class="small-tile" v-for="post in posts" :key="post.url">
                 {{ post.title }}
                 <img :src="post.url"/>
             </li>
@@ -14,6 +15,7 @@
 <script>
 import CryptoJS from 'crypto-js';
 import snoowrap from 'snoowrap';
+import throttle from 'lodash.throttle';
 import secrets from '../secrets.json';
 
 const imageExts = new Set();
@@ -32,12 +34,10 @@ var subName = 'hearthstone';
 export default {
     data() {
         return {
+            runCount: 0,
+            stream: {count: 0, after: null},
             posts: [],
-            cache: [],
-            stream: {
-                count: 0,
-                after: null
-            }
+            cache: []
         }
     },
      props: {
@@ -54,14 +54,37 @@ export default {
             default() {
                 return {limit: 10};
             }
+        },
+        fetchmod: {
+            type: Number,
+            default: 5
         }
     },
-        watch: {
-        $props: {
+    computed: { //watch multiple prop vals
+        resetProps() {
+            const {subreddit, order} = this;
+            return {subreddit, order};
+        },
+        filterProps() {
+            const {subreddit, order, options} = this;
+            return {subreddit, order, options};
+        }
+    },
+
+    watch: {
+        resetProps() {
+            console.log('reseting')
+            this.posts = [];
+            this.cache = [];
+            this.stream = {count: 0, after: null};
+        },
+        filterProps: { //should run after reset
             handler() {
-                this.getPosts().then(newPosts => this.posts = newPosts);
+                console.log('updating post')
+                this.updatePosts();
             },
-            immediate: true
+            immediate: true,
+            deep: true
         }
     },
 
@@ -78,56 +101,76 @@ export default {
             return new snoowrap({...secrets, username, password});
         },
 
-        async getPosts() {
-            const { limit } = this.options;
-            console.log(this.options);
-            console.log(this.order);
-            console.log(this.subreddit);
-            const subRef = this.getRequester().getSubreddit(subName);
-            const orderFunct = "get"
-                .concat(this.order.charAt(0).toUpperCase())
-                .concat(this.order.slice(1).toLowerCase());
+        async fetchImages(target, fetchPosts) {
+            const added = this.cache.splice(0, this.cache.length); //clear cache and add
 
-
-
-            const fetcher = async () => { //modifies stream data
-                const fetched = await subRef[orderFunct]({ //adds after and count args
-                    ...this.options, ...(this.stream.count && this.stream)
-                })
-                //console.log(fetched);
-                this.stream.count += limit;
-                this.stream.after = fetched._query.after;
-                return fetched;
-            }
-
-            return await this.imagePosts(limit, fetcher);
-        },
-
-        async imagePosts(limit, fetcher) {
-
-            let fetched = await fetcher();
-            const filterImages = () => fetched
-                .filter(post => imageExts.has(getExtension(post.url)));
+            const filterImages = posts =>
+                posts.filter(post => imageExts.has(getExtension(post.url)));
 
             let tries = 0;
             const maxTries = 5;
-            const added = this.cache.splice(0, this.cache.length) //clear cache and add
-                .concat(filterImages());
-
-            while(added.length < limit && ++tries < maxTries) {
-                fetched = await fetcher();
-                added.push(...filterImages());
+            while(added.length < target && ++tries < maxTries) {
+                const fetched = await fetchPosts();
+                added.push(...filterImages(fetched));
+                //console.log(`${added.length} vs ${limit}`)
             }
 
-            const cachePoint = limit - added.length; //negative or zero
+            const cachePoint = target - added.length; //negative or zero
             if (cachePoint) { //modifies added
                 this.cache.push(...added.splice(cachePoint));
             }
 
             return added
+        },
+
+        async setPosts() {
+            const runId = this.runCount;
+            const target = this.options.limit - this.posts.length;
+            const limit  = target + this.fetchmod;
+
+            if (target < 0) //modifies posts immediately, maybe check runId?
+                this.cache.shift( this.posts.splice(target) );
+            if (target <= 0)
+                return;
+
+            const subRef = this.getRequester().getSubreddit(this.subreddit);
+            const orderFunct = "get"
+                .concat(this.order.charAt(0).toUpperCase())
+                .concat(this.order.slice(1).toLowerCase());
+
+            let { count, after } = this.stream;
+            const fetchPosts = async () => {
+                console.log('requesting')
+
+                const fetched = await subRef[orderFunct]({ //adds after and count args
+                    ...this.options,
+                    limit,
+                    ...(count && {count, after})
+                })
+                //console.log(fetched);
+                count += limit;
+                after = fetched._query.after;
+                return fetched;
+            }
+
+            const images = await this.fetchImages(target, fetchPosts);
+
+            if (runId === this.runCount) { //race condition?
+                this.stream = {count, after};
+                this.posts.push(...images);
+            }
         }
     },
 
+    beforeCreate() {
+        this.updatePosts = throttle(() => { //prevent excess calls
+            //console.log('fetching')
+            this.runCount++;
+            this.setPosts()
+                .catch(error => console.log(error));
+
+        }, 0, {leading: false});
+    }
 
 }
 </script>
