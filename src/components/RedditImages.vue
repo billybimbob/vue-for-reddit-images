@@ -43,7 +43,7 @@ export default {
         },
         order: {
             type: String,
-            default: 'top'
+            default: 'hot'
         },
         options: {
             type: Object,

@@ -1,12 +1,17 @@
 <template>
   <div id="app">
-      <div class="searchDiv">
+      <SubTitle :subreddit="subreddit"/>
+      <div class="topDiv">
+        <select v-model="order" class="sortSelect">
+          <option v-for="option in sortBy" v-bind:value="option.value" :key="option.value">
+            {{ option.text }}
+          </option>
+        </select>
         <input v-model="newsubname" placeholder="Enter subreddit name" class="searchTerm">
         <button type="button" name="button" v-on:click="setSubName(newsubname)" class="searchButton">Go</button>
       </div>
-    <SubTitle :subreddit="subreddit"/>
     <SideBar/>
-    <RedditImages :subreddit="subreddit"  order="top" :options="{limit: 10}"/>
+    <RedditImages :subreddit="subreddit"  :order="order" :options="{limit: 10}"/>
   </div>
 </template>
 
@@ -26,7 +31,13 @@ export default {
 
   data() {
     return {
-      subreddit: "hearthstone"
+      subreddit: "hearthstone",
+      order: "hot",
+      sortBy: [
+        { text: 'Hot', value: 'hot' },
+        { text: 'Top', value: 'top' },
+        { text: 'New', value: 'new' }
+      ]
     }
   },
   methods: {
@@ -56,7 +67,7 @@ export default {
 }
 
 
-.searchDiv {
+.topDiv {
   align: left;
   font-size: 20px;
   font-family: sans-serif;
@@ -71,7 +82,8 @@ export default {
   border-right: none;
   outline: none;
   color: #9DBFAF;
-  font-size: 15px;
+  font-size: 18px;
+  font-family: Arial;
 }
 
 .searchButton {
@@ -84,6 +96,17 @@ export default {
   font-size: 20px;
 }
 
+.sortSelect {
+  position: relative;
+  font-family: Arial;
+  background: #6f7887;
+  text-align: center;
+  bottom: 2px;
+  border: 0px solid #6f7887;
+  width: 65px;
+  height: 44px;
+
+}
 
 
 
