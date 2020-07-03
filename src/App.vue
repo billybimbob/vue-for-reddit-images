@@ -1,12 +1,12 @@
 <template>
   <div id="app">
-      <div class="searchdiv">
-        <input v-model="newsubname" placeholder="Enter subreddit name">
-        <button type="button" name="button" v-on:click="setSubName(newsubname)">Go to subreddit</button>
+      <div class="searchDiv">
+        <input v-model="newsubname" placeholder="Enter subreddit name" class="searchTerm">
+        <button type="button" name="button" v-on:click="setSubName(newsubname)" class="searchButton">Go</button>
       </div>
     <SubTitle :subreddit="subreddit"/>
     <SideBar/>
-    <RedditImages :subreddit="subreddit"  order="top" :options="{limit: 5}"/>
+    <RedditImages :subreddit="subreddit"  order="top" :options="{limit: 10}"/>
   </div>
 </template>
 
@@ -56,11 +56,35 @@ export default {
 }
 
 
-
-.searchdiv {
+.searchDiv {
   align: left;
   font-size: 20px;
   font-family: sans-serif;
   padding: 20px 0px;
 }
+
+
+.searchTerm {
+  border: 3px solid #6f7887;
+  padding: 15px;
+  height: 8px;
+  border-right: none;
+  outline: none;
+  color: #9DBFAF;
+  font-size: 15px;
+}
+
+.searchButton {
+  width: 45px;
+  height: 44px;
+  position: absolute;
+  border: 0px solid #6f7887;
+  background: #6f7887;
+  color: #fff;
+  font-size: 20px;
+}
+
+
+
+
 </style>
