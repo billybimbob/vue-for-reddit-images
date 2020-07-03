@@ -32,6 +32,7 @@ export default {
     data() {
         return {
             runCount: 0,
+            requester: null,
             stream: {count: 0, after: null},
             posts: [],
             cache: []
@@ -98,64 +99,78 @@ export default {
             return new snoowrap({...secrets, username, password});
         },
 
-        async fetchImages(target, fetchPosts) {
-            const added = this.cache.splice(0, this.cache.length); //clear cache and add
+        checkedChange(changeCallback, {runId}) {
+            if (runId === this.runCount)
+                changeCallback();
+        },
+
+        async fetchImages(fetchPosts, {target=1}) {
+            const images = [...this.cache]; //copy cache
 
             const filterImages = posts =>
                 posts.filter(post => imageExts.has(getExtension(post.url)));
 
             let tries = 0;
             const maxTries = 5;
-            while(added.length < target && ++tries < maxTries) {
+            while(images.length < target && tries++ < maxTries) {
                 const fetched = await fetchPosts();
-                added.push(...filterImages(fetched));
-                //console.log(`${added.length} vs ${limit}`)
+                images.push(...filterImages(fetched));
+                //console.log(`${images.length} vs ${limit}`)
             }
 
-            const cachePoint = target - added.length; //negative or zero
-            if (cachePoint) { //modifies added
-                this.cache.push(...added.splice(cachePoint));
-            }
-
-            return added
+            return images;
         },
 
-        async setPosts() {
+        async setPosts() { //modifies data values
             const runId = this.runCount;
             const target = this.options.limit - this.posts.length;
-            const limit  = target + this.fetchmod;
-
-            if (target < 0) //modifies posts immediately, maybe check runId?
-                this.cache.shift( this.posts.splice(target) );
-            if (target <= 0)
+            
+            if (target === 0) {
                 return;
+            } else if (target < 0) {
+                this.checkedChange(() => {
+                    this.cache.unshift( ...this.posts.splice(target) );
+                }, {runId});
+                return;
+            }
 
-            const subRef = this.getRequester().getSubreddit(this.subreddit);
+            const subRef = this.requester.getSubreddit(this.subreddit);
             const orderFunct = "get"
                 .concat(this.order.charAt(0).toUpperCase())
                 .concat(this.order.slice(1).toLowerCase());
 
+            const limit = target + this.fetchmod; 
             let { count, after } = this.stream;
+
             const fetchPosts = async () => {
                 console.log('requesting')
-
-                const fetched = await subRef[orderFunct]({ //adds after and count args
-                    ...this.options, 
-                    limit,
-                    ...(count && {count, after})
+                const fetched = await subRef[orderFunct]({
+                    ...this.options,
+                    ...(count && {count, after}), 
+                    limit
                 })
-                //console.log(fetched);
                 count += limit;
                 after = fetched._query.after;
+
                 return fetched;
             }
 
-            const images = await this.fetchImages(target, fetchPosts);
+            const images = await this.fetchImages(fetchPosts, {target});
 
-            if (runId === this.runCount) { //race condition?
+            //sync point, changes data values, race condition?
+            this.checkedChange(() => {
+                const cachePoint = target - images.length; //negative or zero
+
+                this.cache.splice(0); 
+                if (cachePoint) {
+                    this.cache.push(
+                        ...images.splice(cachePoint)
+                    );
+                }
                 this.stream = {count, after};
                 this.posts.push(...images);
-            }
+
+            }, {runId});
         }
     },
 
@@ -165,8 +180,10 @@ export default {
             this.runCount++;
             this.setPosts()
                 .catch(error => console.log(error));
-
         }, 0, {leading: false});
+    },
+    created() {
+        this.requester = this.getRequester();
     }
     
 }
