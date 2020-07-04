@@ -10,7 +10,7 @@
             <li class="small-tile"
                 v-for="(post, i) in posts" :key="post.url"
                 :class="{'active': post===focused}"
-            >
+                >
                 <input type="image" :src="post.url" :value="i"
                     @click.stop="imageClick"
                     :style="post.dim.width > post.dim.height

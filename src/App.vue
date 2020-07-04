@@ -3,11 +3,11 @@
       <SubTitle :subreddit="subreddit"/>
       <div class="topDiv">
         <select v-model="order" class="sortSelect">
-          <option v-for="option in sortBy" v-bind:value="option.value" :key="option.value">
+          <option v-for="option in sortBy" v-bind:value="option.value" :key="option.text">
             {{ option.text }}
           </option>
         </select>
-        <input v-model="newsubname" placeholder="Enter subreddit name" class="searchTerm">
+        <input v-model="newsubname" placeholder="Enter subreddit name" v-on:keyup.enter="setSubName(newsubname)" class="searchTerm">
         <button type="button" name="button" v-on:click="setSubName(newsubname)" class="searchButton">Go</button>
       </div>
     <SideBar/>
@@ -34,18 +34,21 @@ export default {
       subreddit: "hearthstone",
       order: "hot",
       sortBy: [
-        { text: 'Hot', value: 'hot' },
-        { text: 'Top', value: 'top' },
-        { text: 'New', value: 'new' }
+        { text: 'Hot', value: 'hot', extra: 'none'},
+        { text: 'Top', value: 'top' , extra: 'none'},
+        { text: 'Top by today', value: 'top' , extra: 'day'},
+        { text: 'Top by week', value: 'top' , extra: 'week'},
+        { text: 'Top by year', value: 'top' , extra: 'year'},
+        { text: 'New', value: 'new', extra: 'none' },
+        { text: 'Controversial', value: 'controversial', extra: 'none'}
       ]
     }
   },
   methods: {
     setSubName(name)
     {
-      console.log("old name: " + this.subreddit, " New name: " + name);
+      //console.log("old name: " + this.subreddit, " New name: " + name);
       this.subreddit = name;
-
     }
   }
 
@@ -103,7 +106,7 @@ export default {
   text-align: center;
   bottom: 2px;
   border: 0px solid #6f7887;
-  width: 65px;
+  width: auto;
   height: 44px;
 
 }
