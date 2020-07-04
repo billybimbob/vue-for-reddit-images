@@ -69,7 +69,7 @@ export default {
         },
         order: {
             type: String,
-            default: 'top'
+            default: 'hot'
         },
         options: {
             type: Object,
@@ -168,7 +168,7 @@ export default {
         async setPosts() { //modifies data values
             const runId = this.runCount;
             const target = this.options.limit - this.posts.length;
-            
+
             if (target === 0) {
                 return;
             } else if (target < 0) {
@@ -183,14 +183,14 @@ export default {
                 .concat(this.order.charAt(0).toUpperCase())
                 .concat(this.order.slice(1).toLowerCase());
 
-            const limit = target + this.fetchmod; 
+            const limit = target + this.fetchmod;
             let { count, after } = this.stream;
 
             const fetchPosts = async () => {
                 console.log('requesting')
                 const fetched = await subRef[orderFunct]({
                     ...this.options,
-                    ...(count && {count, after}), 
+                    ...(count && {count, after}),
                     limit
                 })
                 count += limit;
@@ -247,12 +247,6 @@ export default {
     flex-wrap: wrap;
     flex-direction: row;
     justify-content: flex-start
-    /*column-count: 5;
-    column-gap: 0px;
-    -webkit-column-count: 5;
-    -webkit-column-gap: 0px;
-    -moz-column-count: 5;
-    -moz-column-gap: 0px;*/
 }
 
 .small-tile {
@@ -282,33 +276,4 @@ export default {
 .small-tile.active input {
     transform: scale(1.5);
 }
-
-/*@media (max-width: 1200px) {
-    .image-grid {
-        -moz-column-count:    4;
-        -webkit-column-count: 4;
-        column-count:         4;
-    }
-}
-@media (max-width: 1000px) {
-    .image-grid {
-        -moz-column-count:    3;
-        -webkit-column-count: 3;
-        column-count:         3;
-    }
-}
-@media (max-width: 800px) {
-    .image-grid {
-        -moz-column-count:    2;
-        -webkit-column-count: 2;
-        column-count:         2;
-    }
-}
-@media (max-width: 400px) {
-    .image-grid {
-        -moz-column-count:    1;
-        -webkit-column-count: 1;
-        column-count:         1;
-    }
-}*/
 </style>

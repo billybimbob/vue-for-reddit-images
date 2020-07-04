@@ -1,7 +1,7 @@
 <template>
 
 <div class="sidebar">
-  <a href="#">Sort by</a>
+  <a href="#">Pinned subreddits</a>
 </div>
 
 </template>
