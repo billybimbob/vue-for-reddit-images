@@ -3,15 +3,18 @@
       <SubTitle :subreddit="subreddit"/>
       <div class="topDiv">
         <select v-model="order" class="sortSelect">
-          <option v-for="option in sortBy" v-bind:value="option.value" :key="option.value">
-            {{ option.text }}
+          <option v-for="(option, i) in sortBy" :value="option" :key="option">
+            {{ sortNames[i] }}
           </option>
         </select>
-        <input v-model="newsubname" placeholder="Enter subreddit name" class="searchTerm">
-        <button type="button" name="button" v-on:click="setSubName(newsubname)" class="searchButton">Go</button>
+
+        <form name="orderBy" @submit.prevent="setSubName">
+          <input v-model="newsubname" placeholder="Enter subreddit name" class="searchTerm">
+        </form>
+        <button form="orderBy" type="submit" class="searchButton">Go</button>
       </div>
     <SideBar/>
-    <RedditImages :subreddit="subreddit"  :order="order" :options="{limit: 10}"/>
+    <RedditImages :subreddit="subreddit" :order="order" :options="options"/>
   </div>
 </template>
 
@@ -31,30 +34,35 @@ export default {
 
   data() {
     return {
+      newsubname: "",
       subreddit: "hearthstone",
       order: "hot",
-      sortBy: [
-        { text: 'Hot', value: 'hot' },
-        { text: 'Top', value: 'top' },
-        { text: 'New', value: 'new' }
-      ]
+      options: {
+        limit: 10
+      },
+      sortBy: ['hot', 'top', 'new']
+    }
+  },
+  computed: {
+    sortNames() {
+      return this.sortBy.map(order => order
+          .charAt(0).toUpperCase()
+          .concat(order.slice(1).toLowerCase())
+      )
     }
   },
   methods: {
-    setSubName(name)
-    {
-      console.log("old name: " + this.subreddit, " New name: " + name);
-      this.subreddit = name;
-
+    setSubName() {
+      console.log("old name: " + this.subreddit, " new name: " + this.newsubname);
+      this.subreddit = this.newsubname;
     }
   }
 
 
 }
 
-
-
 </script>
+
 
 <style>
 #app {
@@ -68,12 +76,15 @@ export default {
 
 
 .topDiv {
-  align: left;
   font-size: 20px;
   font-family: sans-serif;
   padding: 20px 0px;
 }
 
+.topDiv * {
+  display: inline-block;
+  vertical-align: top;
+}
 
 .searchTerm {
   border: 3px solid #6f7887;
@@ -89,7 +100,6 @@ export default {
 .searchButton {
   width: 45px;
   height: 44px;
-  position: absolute;
   border: 0px solid #6f7887;
   background: #6f7887;
   color: #fff;
@@ -97,7 +107,6 @@ export default {
 }
 
 .sortSelect {
-  position: relative;
   font-family: Arial;
   background: #6f7887;
   text-align: center;
@@ -107,7 +116,5 @@ export default {
   height: 44px;
 
 }
-
-
 
 </style>

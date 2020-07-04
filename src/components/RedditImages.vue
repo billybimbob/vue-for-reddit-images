@@ -1,24 +1,27 @@
 <template>
     <div class="images" @click="clearFocus">
-        <h2>Posts Should Appear Here:</h2>
-        <h3>Showing {{ posts.length }} images</h3>
-
-        <h4 v-if="focused">{{ focused.title }}</h4>
-        <h4 v-else>Click on an image to view the title</h4>
+        <h2>Showing {{ posts.length }} images</h2>
 
         <ul class="image-grid" v-if="posts.length!==0">
             <li class="small-tile"
                 v-for="(post, i) in posts" :key="post.url"
                 :class="{'active': post===focused}"
             >
-                <input type="image" :src="post.url" :value="i"
-                    @click.stop="imageClick"
+                <input v-if="post!==focused"
+                    type="image" :src="post.url"
+                    @click.stop="imageClick" :value="i"
                     :style="post.dim.width > post.dim.height
-                        ? {height: '100%'}
-                        : {width: '100%'}"
-                />
+                        ? {height: '100%'} : {width: '100%'}" />
             </li>
         </ul>
+        <div v-if="focused" class="focus">
+            <h2>{{ focused.title }}</h2>
+            <input type="image" :src="focused.url"/>
+            <div class="buttons">
+                <button @click.stop="prevImage">Previous</button>
+                <button @click.stop="nextImage">Next</button>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -59,7 +62,7 @@ export default {
             stream: {count: 0, after: null},
             cache: [],
             posts: [],
-            focused: null
+            lookIdx: null
         }
     },
     props: {
@@ -90,6 +93,11 @@ export default {
         filterProps() {
             const {subreddit, order, options} = this;
             return {subreddit, order, options};
+        },
+        focused() {
+            return this.lookIdx!==null
+                ? this.posts[this.lookIdx]
+                : null;
         }
     },
 
@@ -129,30 +137,33 @@ export default {
         },
 
         clearFocus() {
-            this.focused = null;
+            this.lookIdx = null;
         },
         imageClick(event) {
-            //console.log(event.target.value)
-            const targPost = this.posts[event.target.value];
-            if (this.focused === targPost) {
+            if (this.focused === this.posts[event.target.value]) {
                 this.clearFocus();
             } else {
-                this.focused = targPost;
+                this.lookIdx = parseInt(event.target.value);
             }
+        },
+        prevImage() {
+            const postLen = this.posts.length;
+            this.lookIdx = (this.lookIdx-1 + postLen) % postLen;
+        },
+        nextImage() {
+            this.lookIdx = (this.lookIdx+1) % this.posts.length;
         },
 
         async fetchImages(fetchPosts, {target=1}) {
             const images = [...this.cache]; //copy cache
 
-            const filterImages = async (posts) => { //render image twice, not great
-                return await Promise.all(posts
+            const filterImages = async (posts) => ( //render image twice, not great
+                await Promise.all( posts
                     .filter(post => imageExts.has(getExtension(post.url)))
                     .map(async (post) => {
                         const dim = await imageDimension(post.url);
-                        return {...post, dim};
-                    })
-                );
-            }
+                        return {...post, dim}; }) )
+            )
 
             let tries = 0;
             const maxTries = 5;
@@ -250,30 +261,69 @@ export default {
 }
 
 .small-tile {
-    transition: all 200ms ease-in;
-    height: 200px;
-    width: 200px;
-    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 200px;
+    width: 200px;
+    transition: all 200ms ease-in;
+    overflow: hidden;
+}
+
+.small-tile:focus-within {
+    box-shadow: 0 0 25px black;
 }
 
 .small-tile.active {
+    transform: scale(1.5);
     overflow: visible;
+}
+
+.small-tile.active:focus-within {
+    box-shadow: 0 0 0 black;
 }
 
 .small-tile input:focus,
 .small-tile input:active {
     outline: none;
-    box-shadow: 0 0 25px rgb(0, 0, 0, 0.9);
-}
-
-.small-tile input {
-    transition: all 200ms ease-in;
+    box-shadow: 0 0 25px black;
 }
 
 .small-tile.active input {
-    transform: scale(1.5);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.focus {
+    position: fixed;
+    top: 50%;
+    left: 55%;
+    transform: translate(-50%, -50%);
+    display: block;
+    background: white;
+    z-index: 2;
+    margin: 0;
+    padding: 0;
+    box-shadow: 0 0 25px black;
+    border-radius: 6px;
+}
+
+.focus h2 {
+    margin: 0;
+    padding: 10px;
+}
+
+.focus input {
+    max-width: 70vw;
+    max-height: 70vh;
+    vertical-align: top;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+button:hover {
+    cursor: pointer;
 }
 </style>

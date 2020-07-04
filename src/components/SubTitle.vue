@@ -1,7 +1,7 @@
 <template>
 
 <div class="SubNameDiv">
-    <SubNameTitle>{{"/r/" + subreddit}}</SubNameTitle>
+    <h1 class="SubNameTitle">{{"/r/" + subreddit}}</h1>
 </div>
 
 </template>
@@ -29,7 +29,7 @@ export default {
     padding: 0px 25px;
 }
 
-SubNameTitle {
+.SubNameTitle {
     font-size: 40px;
 }
 
