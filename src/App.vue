@@ -14,7 +14,7 @@
         <button form="orderBy" type="submit" class="searchButton">Go</button>
       </div>
     <SideBar/>
-    <RedditImages :subreddit="subreddit" :order="order" :options="options"/>
+    <RedditImages v-bind="filters"/>
   </div>
 </template>
 
@@ -49,6 +49,10 @@ export default {
           .charAt(0).toUpperCase()
           .concat(order.slice(1).toLowerCase())
       )
+    },
+    filters() {
+      const {subreddit, order, options} = this;
+      return {subreddit, order, options};
     }
   },
   methods: {
