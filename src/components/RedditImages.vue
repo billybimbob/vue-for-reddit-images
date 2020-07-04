@@ -1,10 +1,22 @@
 <template>
-    <div class="images">
+    <div class="images" @click="clearFocus">
         <h2>Posts Should Appear Here:</h2>
         <h3>Showing {{ posts.length }} images</h3>
+
+        <h4 v-if="focused">{{ focused.title }}</h4>
+        <h4 v-else>Click on an image to view the title</h4>
+
         <ul class="image-grid" v-if="posts.length!==0">
-            <li class="small-tile" v-for="post in posts" :key="post.url">
-                <img :src="post.url"/>
+            <li class="small-tile"
+                v-for="(post, i) in posts" :key="post.url"
+                :class="{'active': post===focused}"
+            >
+                <input type="image" :src="post.url" :value="i"
+                    @click.stop="imageClick"
+                    :style="post.dim.width > post.dim.height
+                        ? {height: '100%'}
+                        : {width: '100%'}"
+                />
             </li>
         </ul>
     </div>
@@ -27,14 +39,27 @@ const getExtension = (filename) => (
         .toLowerCase()
 )
 
+const imageDimension = (url) => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const {height, width} = img;
+            resolve({height, width});
+        };
+        img.onerror = reject;
+        img.src = url;
+    });
+}
+
 export default {
     data() {
         return {
             runCount: 0,
             requester: null,
             stream: {count: 0, after: null},
+            cache: [],
             posts: [],
-            cache: []
+            focused: null
         }
     },
     props: {
@@ -103,17 +128,37 @@ export default {
                 changeCallback();
         },
 
+        clearFocus() {
+            this.focused = null;
+        },
+        imageClick(event) {
+            //console.log(event.target.value)
+            const targPost = this.posts[event.target.value];
+            if (this.focused === targPost) {
+                this.clearFocus();
+            } else {
+                this.focused = targPost;
+            }
+        },
+
         async fetchImages(fetchPosts, {target=1}) {
             const images = [...this.cache]; //copy cache
 
-            const filterImages = posts =>
-                posts.filter(post => imageExts.has(getExtension(post.url)));
+            const filterImages = async (posts) => { //render image twice, not great
+                return await Promise.all(posts
+                    .filter(post => imageExts.has(getExtension(post.url)))
+                    .map(async (post) => {
+                        const dim = await imageDimension(post.url);
+                        return {...post, dim};
+                    })
+                );
+            }
 
             let tries = 0;
             const maxTries = 5;
             while(images.length < target && tries++ < maxTries) {
                 const fetched = await fetchPosts();
-                images.push(...filterImages(fetched));
+                images.push(...(await filterImages(fetched)));
                 //console.log(`${images.length} vs ${limit}`)
             }
 
@@ -196,21 +241,49 @@ export default {
 
 .image-grid {
     list-style: none;
-    line-height: 0;   
+    line-height: 0;
+    flex: 20%;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: flex-start
+    /*column-count: 5;
+    column-gap: 0px;
     -webkit-column-count: 5;
-    -webkit-column-gap:   0px;
-    -moz-column-count:    5;
-    -moz-column-gap:      0px;
-    column-count:         5;
-    column-gap:           0px; 
+    -webkit-column-gap: 0px;
+    -moz-column-count: 5;
+    -moz-column-gap: 0px;*/
 }
 
-.small-tile img {
-    max-width: 100%;
-    max-height: 100%;
+.small-tile {
+    transition: all 200ms ease-in;
+    height: 200px;
+    width: 200px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-@media (max-width: 1200px) {
+.small-tile.active {
+    overflow: visible;
+}
+
+.small-tile input:focus,
+.small-tile input:active {
+    outline: none;
+    box-shadow: 0 0 25px rgb(0, 0, 0, 0.9);
+}
+
+.small-tile input {
+    transition: all 200ms ease-in;
+}
+
+.small-tile.active input {
+    transform: scale(1.5);
+}
+
+/*@media (max-width: 1200px) {
     .image-grid {
         -moz-column-count:    4;
         -webkit-column-count: 4;
@@ -237,5 +310,5 @@ export default {
         -webkit-column-count: 1;
         column-count:         1;
     }
-}
+}*/
 </style>
