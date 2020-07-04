@@ -1,31 +1,29 @@
 <template>
   <div id="app">
-      <SubTitle :subreddit="subreddit"/>
-      <div class="topDiv">
-        <select v-model="order" class="sortSelect">
-          <option v-for="option in sortBy" v-bind:value="option.value" :key="option.text">
-            {{ option.text }}
-          </option>
-        </select>
-        <input v-model="newsubname" placeholder="Enter subreddit name" v-on:keyup.enter="setSubName(newsubname)" class="searchTerm">
-        <button type="button" name="button" v-on:click="setSubName(newsubname)" class="searchButton">Go</button>
-      </div>
+    <SubTitle :subreddit="subreddit"/>
+
+    <Filters
+      :subreddit.sync="subreddit"
+      :order.sync="order"
+      :options.sync="options"/>
     <SideBar/>
-    <RedditImages :subreddit="subreddit"  :order="order" :options="{limit: 10}"/>
+
+    <RedditImages v-bind="filters"/>
   </div>
 </template>
 
 <script>
 import SubTitle from './components/SubTitle'
 import SideBar from './components/SideBar'
+import Filters from './components/Filters'
 import RedditImages from './components/RedditImages'
-
 
 export default {
   name: 'App',
   components: {
     SubTitle,
     SideBar,
+    Filters,
     RedditImages
   },
 
@@ -33,31 +31,21 @@ export default {
     return {
       subreddit: "hearthstone",
       order: "hot",
-      sortBy: [
-        { text: 'Hot', value: 'hot', extra: 'none'},
-        { text: 'Top', value: 'top' , extra: 'none'},
-        { text: 'Top by today', value: 'top' , extra: 'day'},
-        { text: 'Top by week', value: 'top' , extra: 'week'},
-        { text: 'Top by year', value: 'top' , extra: 'year'},
-        { text: 'New', value: 'new', extra: 'none' },
-        { text: 'Controversial', value: 'controversial', extra: 'none'}
-      ]
+      options: {
+        limit: 10
+      }
     }
   },
-  methods: {
-    setSubName(name)
-    {
-      //console.log("old name: " + this.subreddit, " New name: " + name);
-      this.subreddit = name;
+  computed: {
+    filters() {
+      const {subreddit, order, options} = this;
+      return {subreddit, order, options};
     }
   }
-
-
 }
 
-
-
 </script>
+
 
 <style>
 #app {
@@ -68,49 +56,4 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
-
-
-.topDiv {
-  align: left;
-  font-size: 20px;
-  font-family: sans-serif;
-  padding: 20px 0px;
-}
-
-
-.searchTerm {
-  border: 3px solid #6f7887;
-  padding: 15px;
-  height: 8px;
-  border-right: none;
-  outline: none;
-  color: #9DBFAF;
-  font-size: 18px;
-  font-family: Arial;
-}
-
-.searchButton {
-  width: 45px;
-  height: 44px;
-  position: absolute;
-  border: 0px solid #6f7887;
-  background: #6f7887;
-  color: #fff;
-  font-size: 20px;
-}
-
-.sortSelect {
-  position: relative;
-  font-family: Arial;
-  background: #6f7887;
-  text-align: center;
-  bottom: 2px;
-  border: 0px solid #6f7887;
-  width: auto;
-  height: 44px;
-
-}
-
-
-
 </style>

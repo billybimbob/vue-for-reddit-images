@@ -1,25 +1,9 @@
 <template>
-    <div class="images" @click="clearFocus">
-        <h2>Posts Should Appear Here:</h2>
-        <h3>Showing {{ posts.length }} images</h3>
-
-        <h4 v-if="focused">{{ focused.title }}</h4>
-        <h4 v-else>Click on an image to view the title</h4>
-
-        <ul class="image-grid" v-if="posts.length!==0">
-            <li class="small-tile"
-                v-for="(post, i) in posts" :key="post.url"
-                :class="{'active': post===focused}"
-                >
-                <input type="image" :src="post.url" :value="i"
-                    @click.stop="imageClick"
-                    :style="post.dim.width > post.dim.height
-                        ? {height: '100%'}
-                        : {width: '100%'}"
-                />
-            </li>
-        </ul>
-    </div>
+    <!--
+        could limit posts to only render
+        what's on screen
+    -->
+    <Gallery :posts="posts"/>
 </template>
 
 
@@ -28,6 +12,7 @@ import CryptoJS from 'crypto-js';
 import snoowrap from 'snoowrap';
 import throttle from 'lodash.throttle';
 import secrets from '../secrets.json';
+import Gallery from './Gallery';
 
 const imageExts = new Set();
 ["jpeg", "jpg", "png", "gif", 'tiff', 'bmp'].forEach(ext => imageExts.add(ext));
@@ -52,14 +37,17 @@ const imageDimension = (url) => {
 }
 
 export default {
+    components: {
+        Gallery
+    },
+
     data() {
         return {
             runCount: 0,
             requester: null,
             stream: {count: 0, after: null},
             cache: [],
-            posts: [],
-            focused: null
+            posts: []
         }
     },
     props: {
@@ -128,31 +116,16 @@ export default {
                 changeCallback();
         },
 
-        clearFocus() {
-            this.focused = null;
-        },
-        imageClick(event) {
-            //console.log(event.target.value)
-            const targPost = this.posts[event.target.value];
-            if (this.focused === targPost) {
-                this.clearFocus();
-            } else {
-                this.focused = targPost;
-            }
-        },
-
         async fetchImages(fetchPosts, {target=1}) {
             const images = [...this.cache]; //copy cache
 
-            const filterImages = async (posts) => { //render image twice, not great
-                return await Promise.all(posts
+            const filterImages = async (posts) => ( //render image twice, not great
+                await Promise.all( posts
                     .filter(post => imageExts.has(getExtension(post.url)))
                     .map(async (post) => {
                         const dim = await imageDimension(post.url);
-                        return {...post, dim};
-                    })
-                );
-            }
+                        return {...post, dim}; }) )
+            )
 
             let tries = 0;
             const maxTries = 5;
@@ -231,49 +204,3 @@ export default {
 
 }
 </script>
-
-
-<style scoped>
-.images {
-    width: 91%;
-    float: right;
-}
-
-.image-grid {
-    list-style: none;
-    line-height: 0;
-    flex: 20%;
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    justify-content: flex-start
-}
-
-.small-tile {
-    transition: all 200ms ease-in;
-    height: 200px;
-    width: 200px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.small-tile.active {
-    overflow: visible;
-}
-
-.small-tile input:focus,
-.small-tile input:active {
-    outline: none;
-    box-shadow: 0 0 25px rgb(0, 0, 0, 0.9);
-}
-
-.small-tile input {
-    transition: all 200ms ease-in;
-}
-
-.small-tile.active input {
-    transform: scale(1.5);
-}
-</style>
