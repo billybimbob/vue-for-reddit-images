@@ -1,8 +1,18 @@
 <template>
     <div class="topDiv">
         <select :value="order" @change="orderChange" class="sortSelect">
-            <option v-for="(option, i) in sortBy" :value="option" :key="option">
+            <option v-for="(option, i) in sortBy"
+                :value="option.name" :key="option.name"
+            >
                 {{ sortNames[i] }}
+            </option>
+        </select>
+
+        <select v-if="timed" :value="time" @change="timeChange" class="sortSelect">
+            <option v-for="(interval, i) in times"
+                :value="interval" :key="interval"
+            >
+                {{ timeNames[i] }}
             </option>
         </select>
 
@@ -20,20 +30,39 @@ export default {
     data() {
         return {
             newsubname: "",
-            sortBy: ['hot', 'top', 'new', 'controversial']
+            sortBy: [
+                {name: 'hot', timed: false},
+                {name: 'top', timed: true},
+                {name: 'new', timed: false},
+                {name: 'controversial', timed: true},
+                {name: 'rising', timed: false}
+            ],
+            times: ['hour', 'day', 'week', 'month', 'year', 'all']
         };
     },
     props: {
         subreddit: String,
         order: String,
-        options: Object
+        time: String
     },
     computed: {
         sortNames() {
-            return this.sortBy.map(order => order
+            return this.sortBy.map(order => order.name
                 .charAt(0).toUpperCase()
-                .concat(order.slice(1).toLowerCase()),
-            )
+                .concat(order.name.slice(1).toLowerCase())
+            );
+        },
+        timeNames() {
+            return this.times.map(time => time
+                .charAt(0).toUpperCase()
+                .concat(time.slice(1).toLowerCase())
+            );
+        },
+        timed() {
+            const orderIdx = this.sortBy
+                .map(order => order.name)
+                .indexOf(this.order);
+            return this.sortBy[orderIdx].timed;
         }
     },
 
@@ -41,6 +70,9 @@ export default {
         orderChange(event) {
             //console.log(event.target.value)
             this.$emit('update:order', event.target.value);
+        },
+        timeChange(event) {
+            this.$emit('update:time', event.target.value);
         },
         setSubName() {
             //console.log("old name: " + this.subreddit, " new name: " + this.newsubname);

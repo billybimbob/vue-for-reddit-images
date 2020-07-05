@@ -5,7 +5,7 @@
     <Filters
       :subreddit.sync="subreddit"
       :order.sync="order"
-      :options.sync="options"/>
+      :time.sync="options.time"/>
 
     <RedditImages v-bind="filters"/>
   </div>
@@ -29,7 +29,8 @@ export default {
       subreddit: "pics",
       order: "hot",
       options: {
-        limit: 10
+        limit: 10,
+        time: 'day'
       }
     }
   },

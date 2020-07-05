@@ -73,7 +73,8 @@ export default {
     computed: { //watch multiple prop vals
         resetProps() {
             const {subreddit, order} = this;
-            return {subreddit, order};
+            const {time} = this.options;
+            return {subreddit, order, time};
         },
         filterProps() {
             const {subreddit, order, options} = this;
@@ -121,8 +122,8 @@ export default {
 
             const filterImages = async (posts) => ( //render image twice, not great
                 await Promise.all( posts
-                    .filter(post => post.author.name!=='[deleted]')
-                    .filter(post => imageExts.has(getExtension(post.url)))
+                    .filter(post => post.author.name!=='[deleted]'
+                        && imageExts.has(getExtension(post.url)) )
                     .map(async (post) => {
                         const dim = await imageDimension(post.url);
                         return {...post, dim}; }) )

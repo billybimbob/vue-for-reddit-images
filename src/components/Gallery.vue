@@ -166,6 +166,10 @@ export default {
     border-bottom-right-radius: 6px;
 }
 
+.focus input:focus {
+    outline: none;
+}
+
 .buttons .left,
 .buttons .right {
     display: flex;
@@ -212,8 +216,7 @@ export default {
     transition: all .5s;
 }
 .zoom-enter, .zoom-leave-to {
-    transform: scale(0.5);
-    transform: translate(-50%, -50%);
     opacity: 0;
+    transform: translate(-50%, -50%);
 }
 </style>
