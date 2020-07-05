@@ -1,6 +1,7 @@
 <template>
     <div class="images" @click="clearFocus">
-        <h2>Showing {{ posts.length }} images</h2>
+        <h2 v-if="posts.length == 0">Loading images</h2>
+        <h2 v-else>Showing {{ posts.length }} images</h2>
 
         <ul class="image-grid" v-if="posts.length!==0">
             <li class="small-tile"
