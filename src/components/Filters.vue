@@ -1,15 +1,16 @@
 <template>
     <div class="topDiv">
-        <select :order="order" @input="orderChange" class="sortSelect">
+        <select :value="order" @change="orderChange" class="sortSelect">
             <option v-for="(option, i) in sortBy" :value="option" :key="option">
-            {{ sortNames[i] }}
+                {{ sortNames[i] }}
             </option>
         </select>
 
         <form name="orderBy" @submit.prevent="setSubName">
             <input v-model="newsubname" placeholder="Enter subreddit name" class="searchTerm">
+            <button @click="setSubName"
+                form="orderBy" type="submit" class="searchButton">Go</button>
         </form>
-        <button form="orderBy" type="submit" @click="setSubName" class="searchButton">Go</button>
     </div>
 </template>
 
@@ -43,6 +44,7 @@ export default {
         },
         setSubName() {
             //console.log("old name: " + this.subreddit, " new name: " + this.newsubname);
+            console.log(this.newsubname);
             this.$emit('update:subreddit', this.newsubname);
         }
     }
@@ -90,5 +92,9 @@ export default {
     border: 0px solid #6f7887;
     width: auto;
     height: 44px;
+}
+
+button {
+  cursor: pointer;
 }
 </style>
