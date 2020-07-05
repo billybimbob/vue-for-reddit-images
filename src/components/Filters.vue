@@ -20,7 +20,7 @@ export default {
     data() {
         return {
             newsubname: "",
-            sortBy: ['hot', 'top', 'new']
+            sortBy: ['hot', 'top', 'new', 'controversial']
         };
     },
     props: {
@@ -90,7 +90,7 @@ export default {
     text-align: center;
     bottom: 2px;
     border: 0px solid #6f7887;
-    width: 65px;
+    width: auto;
     height: 44px;
 }
 
