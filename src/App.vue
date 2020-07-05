@@ -1,12 +1,11 @@
 <template>
   <div id="app">
-    <SubTitle :subreddit="subreddit"/>
+    <SubTitle  @changeSub="onSubClick" :subreddit="subreddit"/>
 
     <Filters
       :subreddit.sync="subreddit"
       :order.sync="order"
       :options.sync="options"/>
-    <SideBar/>
 
     <RedditImages v-bind="filters"/>
   </div>
@@ -14,7 +13,6 @@
 
 <script>
 import SubTitle from './components/SubTitle'
-import SideBar from './components/SideBar'
 import Filters from './components/Filters'
 import RedditImages from './components/RedditImages'
 
@@ -22,14 +20,13 @@ export default {
   name: 'App',
   components: {
     SubTitle,
-    SideBar,
     Filters,
     RedditImages
   },
 
   data() {
     return {
-      subreddit: "hearthstone",
+      subreddit: "pics",
       order: "hot",
       options: {
         limit: 10
@@ -41,6 +38,13 @@ export default {
       const {subreddit, order, options} = this;
       return {subreddit, order, options};
     }
+  },
+  methods: {
+    onSubClick(sub)
+        {
+          console.log("sub changing on click to:" + sub);
+          this.subreddit = sub;
+          }
   }
 }
 
