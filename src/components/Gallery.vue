@@ -128,7 +128,8 @@ export default {
 }
 
 .small-tile input:focus,
-.small-tile input:active {
+.small-tile input:active,
+.small-tile:hover {
     outline: none;
     box-shadow: 0 0 25px black;
 }

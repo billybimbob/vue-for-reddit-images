@@ -121,6 +121,7 @@ export default {
 
             const filterImages = async (posts) => ( //render image twice, not great
                 await Promise.all( posts
+                    .filter(post => post.author.name!=='[deleted]')
                     .filter(post => imageExts.has(getExtension(post.url)))
                     .map(async (post) => {
                         const dim = await imageDimension(post.url);
