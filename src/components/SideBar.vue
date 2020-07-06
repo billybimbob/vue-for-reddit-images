@@ -2,7 +2,7 @@
 
 <div class="sidebar">
   <a href="#">Pinned subreddits</a>
-  <li v-for="sub in sublist" :key="sub" class="listText" v-on:click="emitSub(sub)">
+  <li v-for="sub in sublist" :key="sub" class="listText" @click="emitSub(sub)">
     {{ "r/" + sub }}
   </li>
 </div>
@@ -19,10 +19,10 @@ export default {
   },
   methods:
   {
-      emitSub(sub) {
+    emitSub(sub) {
       console.log("test");
-      this.$emit('changeSub', sub);
-      }
+      this.$emit('update:subreddit', sub);
+    }
   }
 
 }

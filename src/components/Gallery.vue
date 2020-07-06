@@ -14,16 +14,20 @@
             </li>
         </ul>
 
-        <transition name="zoom">
+        <transition :name="trans">
             <div v-if="focused" class="focus" :key="focused.url">
-                <div class="scroll-box">
-                    <h2>{{ focused.title }}</h2>
+                <div class="scroll-box" :key="focused.url">
+                    <a :href="focused.link" target="_blank">
+                        <h2>{{ focused.title }}</h2>
+                    </a>
                     <input type="image" :src="focused.url" :alt="focused.title"/>
-                    <div class="buttons">
-                        <img class="left" @click.stop="prevImage" :src="leftArrow"/>
-                        <img class="right" @click.stop="nextImage" :src="rightArrow">
-                    </div>
                 </div>
+            </div>
+        </transition>
+        <transition name="appear">
+            <div v-if="focused" class="buttons">
+                <img class="left" @click.stop="prevImage" :src="leftArrow"/>
+                <img class="right" @click.stop="nextImage" :src="rightArrow">
             </div>
         </transition>
     </div>
@@ -39,6 +43,7 @@ export default {
         return {
             leftArrow,
             rightArrow,
+            trans: "fade",
             lookIdx: null
         }
     },
@@ -64,25 +69,66 @@ export default {
             );
         }
     },
-
+    
+    watch: {
+        posts() {
+            this.clearFocus();
+        }
+    },
     methods: {
         clearFocus() {
-            this.lookIdx = null;
+            this.trans = "fade";
+            this.$nextTick(() => { //not sure why just for this one
+                this.lookIdx = null;
+            })
         },
         imageClick(event) {
             if (this.focused === this.posts[event.target.value]) {
                 this.clearFocus();
             } else {
-                this.lookIdx = parseInt(event.target.value);
+                const prevIdx = this.lookIdx;
+                const nextIdx = parseInt(event.target.value);
+                if (prevIdx!==null) {
+                    this.trans = prevIdx > nextIdx
+                        ? "from-left" : "from-right";
+                }
+                this.lookIdx = nextIdx;
             }
         },
         prevImage() {
             const postLen = this.posts.length;
+            this.trans = "from-left";
             this.lookIdx = (this.lookIdx-1 + postLen) % postLen;
         },
         nextImage() {
+            this.trans = "from-right";
             this.lookIdx = (this.lookIdx+1) % this.posts.length;
         },
+
+        arrowKey(event) {
+            if (this.focused) {
+                switch(event.key) {
+                    case 'ArrowLeft':
+                        this.prevImage();
+                        break;
+                    case 'ArrowRight':
+                        this.nextImage();
+                        break;
+                    case 'Escape':
+                        this.clearFocus();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    },
+    //add event listener for arrow keys
+    mounted() {
+        window.addEventListener('keyup', this.arrowKey);
+    },
+    beforeDestroy() {
+        window.removeEventListener('keyup', this.arrowKey);
     }
 }
 </script>
@@ -173,50 +219,62 @@ export default {
 .buttons .left,
 .buttons .right {
     display: flex;
-    position: absolute;
-    top: 50%;
-    height: 50px;
-    width: 50px;
+    z-index: 3;
+    position: fixed;
+    top: 45%;
+    height: 65px;
+    width: 65px;
     justify-content: center;
     background: white;
     border-radius: 50%;
     cursor: pointer;
     align-items: center;
     transition: transform ease-in 0.1s;
-    box-shadow: 0 0 15px black;
+    box-shadow: 0 0 30px black;
 }
 
 .buttons .left {
-    left: -25px;
+    left: 18%;
 }
 
 .buttons .right {
-    right: -25px;
+    right: 8%;
 }
 
 .buttons .left:hover,
 .buttons .right:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
     cursor: pointer;
 }
 
 
 .from-right-enter-active,
-.from-right-leave-active {
+.from-right-leave-active,
+.from-left-enter-active,
+.from-left-leave-active {
     transition: all .5s;
 }
-.from-right-enter {
+.from-right-enter,
+.from-left-leave-to {
+    opacity: 0;
     transform: translate(100vw, -50%);
 }
-.from-right-leave-to {
+.from-right-leave-to,
+.from-left-enter {
+    opacity: 0;
     transform: translate(-100vw, -50%);
 }
 
-.zoom-enter-active, .zoom-leave-active {
+.fade-enter-active, .fade-leave-active,
+.appear-enter-active, .appear-leave-active {
     transition: all .5s;
 }
-.zoom-enter, .zoom-leave-to {
+.fade-enter, .fade-leave-to {
     opacity: 0;
     transform: translate(-50%, -50%);
+}
+
+.appear-enter, .appear-leave-to {
+    opacity: 0;
 }
 </style>

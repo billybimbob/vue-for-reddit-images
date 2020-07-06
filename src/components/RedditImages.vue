@@ -36,6 +36,9 @@ const imageDimension = (url) => {
     });
 }
 
+const reddit = "//reddit.com";
+
+
 export default {
     components: {
         Gallery
@@ -126,7 +129,8 @@ export default {
                         && imageExts.has(getExtension(post.url)) )
                     .map(async (post) => {
                         const dim = await imageDimension(post.url);
-                        return {...post, dim}; }) )
+                        const link = reddit + post.permalink;
+                        return {...post, dim, link}; }) )
             )
 
             let tries = 0;

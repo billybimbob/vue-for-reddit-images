@@ -3,7 +3,8 @@
 <div>
     <div class="SubNameDiv">
       <h1 class="SubNameTitle">{{"/r/" + subreddit}}</h1>
-      <button type="submit" class="pinButton" @click="pinSub()">Pin Subreddit</button>
+      <button v-if="!pinned" class="pinButton" type="submit" @click="pinSub">Pin Subreddit</button>
+      <button v-else class="pinButton">Pinned</button>
     </div>
     <SideBar v-on="$listeners" :sublist="sublist" />
 </div>
@@ -34,19 +35,21 @@ export default {
       default: "pics"
     }
   },
+  computed:
+  {
+    pinned() {
+      return this.sublist.includes(this.subreddit)
+    }
+  },
   methods:
   {
     pinSub() {
-      if (!this.sublist.includes(this.subreddit))
-          {
-            this.sublist.push(this.subreddit);
-          }
+      if (!this.pinned) {
+        this.sublist.push(this.subreddit);
+      }
     }
-
   }
-
 }
-
 
 </script>
 
@@ -70,7 +73,7 @@ export default {
   width: auto;
   height: 40px;
   align-self: auto;
-
+  cursor: pointer;
 }
 
 

@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <SubTitle  @changeSub="onSubClick" :subreddit="subreddit"/>
+    <SubTitle :subreddit.sync="subreddit"/>
 
     <Filters
       :subreddit.sync="subreddit"
@@ -39,13 +39,6 @@ export default {
       const {subreddit, order, options} = this;
       return {subreddit, order, options};
     }
-  },
-  methods: {
-    onSubClick(sub)
-        {
-          console.log("sub changing on click to:" + sub);
-          this.subreddit = sub;
-          }
   }
 }
 
