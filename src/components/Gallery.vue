@@ -21,6 +21,9 @@
                         <h2>{{ focused.title }}</h2>
                     </a>
                     <input type="image" :src="focused.img" :alt="focused.title"/>
+                    <a :href="focused.img" :download="focused.title">
+                      <button type="submit">Download Image</button>
+                    </a>
                 </div>
             </div>
         </transition>
@@ -69,7 +72,7 @@ export default {
             );
         }
     },
-    
+
     watch: {
         posts() {
             this.clearFocus();
@@ -104,6 +107,7 @@ export default {
             this.trans = "from-right";
             this.lookIdx = (this.lookIdx+1) % this.posts.length;
         },
+
 
         arrowKey(event) {
             if (this.focused) {
