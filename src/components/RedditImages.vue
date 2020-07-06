@@ -127,11 +127,13 @@ export default {
                 await Promise.all( posts
                     .filter(post => post.author.name!=='[deleted]'
                         && imageExts.has(getExtension(post.url)) )
-                    .map(async (post) => {
-                        const dim = await imageDimension(post.url);
-                        const link = reddit + post.permalink;
-                        return {...post, dim, link}; }) )
-            )
+                    .map(async (post) => ({
+                        title: post.title, 
+                        img: post.url,
+                        url: reddit + post.permalink,
+                        dim: await imageDimension(post.url)
+                    }))
+                ))
 
             let tries = 0;
             const maxTries = 5;
@@ -200,7 +202,10 @@ export default {
             //console.log('fetching')
             this.runCount++;
             this.setPosts()
-                .catch(error => console.log(error));
+                .catch(error => {
+                    console.log('issue fetching data:')
+                    console.log(error)
+                });
         }, 0, {leading: false});
     },
 

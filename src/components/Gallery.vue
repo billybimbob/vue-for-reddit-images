@@ -8,7 +8,7 @@
                 class="small-tile" :class="{'active': post===focused}"
             >
                 <input v-if="post!==focused"
-                    type="image" :src="post.url" :alt="post.title"
+                    type="image" :src="post.img" :alt="post.title"
                     @click.stop="imageClick" :value="i"
                     :style="imageStyles[i]" />
             </li>
@@ -17,10 +17,10 @@
         <transition :name="trans">
             <div v-if="focused" class="focus" :key="focused.url">
                 <div class="scroll-box" :key="focused.url">
-                    <a :href="focused.link" target="_blank">
+                    <a :href="focused.url" target="_blank">
                         <h2>{{ focused.title }}</h2>
                     </a>
-                    <input type="image" :src="focused.url" :alt="focused.title"/>
+                    <input type="image" :src="focused.img" :alt="focused.title"/>
                 </div>
             </div>
         </transition>
