@@ -10,13 +10,14 @@
                 <input v-if="post!==focused"
                     type="image" :src="post.img" :alt="post.title"
                     @click.stop="imageClick" :value="i"
-                    :style="imageStyles[i]" />
+                    :style="imageStyles[i].style"
+                    @[initialLoad(i)]="imageSize" />
             </li>
         </ul>
 
         <transition :name="trans">
             <div v-if="focused" class="focus" :key="focused.url">
-                <div class="scroll-box" :key="focused.url">
+                <div class="scroll-box">
                     <a :href="focused.url" target="_blank">
                         <h2>{{ focused.title }}</h2>
                     </a>
@@ -26,8 +27,8 @@
         </transition>
         <transition name="appear">
             <div v-if="focused" class="buttons">
-                <img class="left" @click.stop="prevImage" :src="leftArrow"/>
-                <img class="right" @click.stop="nextImage" :src="rightArrow">
+                <img class="left" @click.stop="prevImage" :src="arrow.left"/>
+                <img class="right" @click.stop="nextImage" :src="arrow.right">
             </div>
         </transition>
     </div>
@@ -41,10 +42,14 @@ import rightArrow from '../assets/right-arrow.svg'
 export default {
     data() {
         return {
-            leftArrow,
-            rightArrow,
+            imageStyles: [],
+            loaded: 0,
+            arrow: {
+                left: leftArrow,
+                right: rightArrow,
+            },
             trans: "fade",
-            lookIdx: null
+            lookIdx: null,
         }
     },
     props: {
@@ -60,27 +65,50 @@ export default {
             return this.lookIdx!==null
                 ? this.posts[this.lookIdx]
                 : null;
-        },
-        imageStyles() {
-            return this.posts.map(post =>
-                post.dim.width > post.dim.height
-                    ? {height: '100%'}
-                    : {width: '100%'}
-            );
         }
     },
-    
     watch: {
-        posts() {
-            this.clearFocus();
+        loaded() {
+            if (this.loaded === this.posts.length) {
+                console.log('forcing update')
+                this.$forceUpdate();
+            }
+        },
+        posts: {
+            handler() {
+                this.clearFocus();
+                this.imageStyles = this.posts.map(() => ({
+                    style: {maxHeight: '100%', maxWidth: '100%'},
+                    updated: false
+                }));
+                this.loaded = 0;
+            },
+            immediate: true
         }
     },
+
     methods: {
         clearFocus() {
             this.trans = "fade";
             this.$nextTick(() => { //not sure why just for this one
                 this.lookIdx = null;
             })
+        },
+        initialLoad(idx) {
+            return this.imageStyles[idx].updated ? null : 'load';
+        },
+        imageSize(event) {
+            const input = event.target;
+            const imgIdx = input.value;
+            const boundDim = input.width > input.height
+                ? 'maxHeight' : 'maxWidth';
+
+            this.imageStyles[imgIdx] = {
+                style: {[boundDim]: '100%'},
+                updated: true
+            };
+            this.loaded += 1;
+            //this.$forceUpdate();
         },
         imageClick(event) {
             if (this.focused === this.posts[event.target.value]) {
@@ -95,6 +123,7 @@ export default {
                 this.lookIdx = nextIdx;
             }
         },
+
         prevImage() {
             const postLen = this.posts.length;
             this.trans = "from-left";
@@ -123,6 +152,7 @@ export default {
             }
         }
     },
+
     //add event listener for arrow keys
     mounted() {
         window.addEventListener('keyup', this.arrowKey);

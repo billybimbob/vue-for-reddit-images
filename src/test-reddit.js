@@ -89,5 +89,5 @@ const printPosts = async (...getArgs) => {
     });
 };
 
-//printPosts('hearthstone', 'top', {limit: 5})
+printPosts('hearthstone', 'top', {limit: 5})
     //.then(() => printPosts('pics', 'top', {limit: 10}));

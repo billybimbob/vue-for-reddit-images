@@ -24,18 +24,6 @@ const getExtension = (filename) => (
         .toLowerCase()
 )
 
-const imageDimension = (url) => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-            const {height, width} = img;
-            resolve({height, width});
-        };
-        img.onerror = reject;
-        img.src = url;
-    });
-}
-
 const reddit = "//reddit.com";
 
 
@@ -66,22 +54,37 @@ export default {
             type: Object,
             default() {
                 return {limit: 10};
+            },
+            validator(value) {
+                return value.limit && value.limit>=0 &&
+                    (!value.fetchmod || value.fetchmod>=0);
             }
-        },
-        fetchmod: {
-            type: Number,
-            default: 10
         }
     },
-    computed: { //watch multiple prop vals
+    computed: {
+        fetchmod() {
+            return 'fetchmod' in this.options
+                ? this.options.fetchmod : 10;
+        },
+        settings() { //normalized options props
+            const normal = {
+                time: 'day',
+                ...this.options
+            };
+            //console.log(normal);
+            delete normal.fetchmod;
+            //console.log(normal);
+            return normal;
+        },
+        // to watch multiple prop vals
         resetProps() {
             const {subreddit, order} = this;
-            const {time} = this.options;
+            const {time} = this.settings;
             return {subreddit, order, time};
         },
         filterProps() {
-            const {subreddit, order, options} = this;
-            return {subreddit, order, options};
+            const {subreddit, order, settings} = this;
+            return {subreddit, order, settings};
         }
     },
 
@@ -123,24 +126,21 @@ export default {
         async fetchImages(fetchPosts, {target=1}) {
             const images = [...this.cache]; //copy cache
 
-            const filterImages = async (posts) => ( //render image twice, not great
-                await Promise.all( posts
-                    .filter(post => post.author.name!=='[deleted]'
-                        && imageExts.has(getExtension(post.url)) )
-                    .map(async (post) => ({
-                        title: post.title, 
-                        img: post.url,
-                        url: reddit + post.permalink,
-                        dim: await imageDimension(post.url)
-                    }))
-                ))
+            const filterImages = (posts) => (posts
+                .filter(post => post.author.name!=='[deleted]'
+                    && imageExts.has(getExtension(post.url)) )
+                .map(post => ({
+                    title: post.title, 
+                    img: post.url,
+                    url: reddit + post.permalink
+                }))
+            )
 
             let tries = 0;
-            const maxTries = 5;
-            while(images.length < target && tries++ < maxTries) {
+            const MAX_TRIES = 5;
+            while(images.length < target && tries++ < MAX_TRIES) {
                 const fetched = await fetchPosts();
-                images.push(...(await filterImages(fetched)));
-                //console.log(`${images.length} vs ${limit}`)
+                images.push(...filterImages(fetched));
             }
 
             return images;
@@ -148,7 +148,7 @@ export default {
 
         async setPosts() { //modifies data values
             const runId = this.runCount;
-            const target = this.options.limit - this.posts.length;
+            const target = this.settings.limit - this.posts.length;
 
             if (target === 0) {
                 return;
@@ -170,7 +170,7 @@ export default {
             const fetchPosts = async () => {
                 console.log('requesting')
                 const fetched = await subRef[orderFunct]({
-                    ...this.options,
+                    ...this.settings,
                     ...(count && {count, after}),
                     limit
                 })
