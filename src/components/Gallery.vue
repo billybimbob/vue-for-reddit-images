@@ -6,6 +6,7 @@
         <ul class="image-grid" v-if="posts.length!==0">
             <li v-for="(post, i) in posts" :key="post.url"
                 class="small-tile" :class="{'active': post===focused}"
+                :disabled="loaded<posts.length"
             >
                 <input v-if="post!==focused"
                     type="image" :src="post.img" :alt="post.title"
@@ -22,6 +23,9 @@
                         <h2>{{ focused.title }}</h2>
                     </a>
                     <input type="image" :src="focused.img" :alt="focused.title"/>
+                    <a :href="focused.img" :download="focused.title">
+                      <button type="submit">Download Image</button>
+                    </a>
                 </div>
             </div>
         </transition>
@@ -67,6 +71,7 @@ export default {
                 : null;
         }
     },
+
     watch: {
         loaded() {
             if (this.loaded === this.posts.length) {
@@ -133,6 +138,7 @@ export default {
             this.trans = "from-right";
             this.lookIdx = (this.lookIdx+1) % this.posts.length;
         },
+
 
         arrowKey(event) {
             if (this.focused) {

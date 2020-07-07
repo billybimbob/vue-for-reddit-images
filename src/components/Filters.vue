@@ -18,8 +18,7 @@
 
         <form name="orderBy" @submit.prevent="setSubName">
             <input v-model="newsubname" placeholder="Enter subreddit name" class="searchTerm">
-            <button @click="setSubName"
-                form="orderBy" type="submit" class="searchButton">Go</button>
+            <button @click="setSubName" form="orderBy" type="submit" class="searchButton">Go</button>
         </form>
     </div>
 </template>
