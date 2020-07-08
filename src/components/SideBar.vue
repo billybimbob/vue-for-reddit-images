@@ -1,10 +1,12 @@
 <template>
 
 <div class="sidebar">
-  <a href="#">Pinned subreddits</a>
-  <li v-for="sub in sublist" :key="sub" class="listText" @click="emitSub(sub)">
-    {{ "r/" + sub }}
-  </li>
+  <div class="sidebar-fixed">
+    <a href="#">Pinned subreddits</a>
+    <li v-for="sub in sublist" :key="sub" class="listText" @click="emitSub(sub)">
+      {{ "r/" + sub }}
+    </li>
+  </div>
 </div>
 
 </template>
@@ -31,17 +33,20 @@ export default {
 
 <style scoped>
 .sidebar {
-  height: 100%;
-  width: 160px;
+  width: 20vw;
+  max-width: 180px;
+}
+
+.sidebar-fixed {
+  height: 100vh;
+  width: inherit;
+  max-width: inherit;
   position: fixed;
   z-index: 1;
-  top: 0;
-  left: 0;
   background-color: #424447;
   overflow-x: hidden;
   padding-top: 20px;
 }
-
 
 .sidebar a {
   padding: 6px 8px 6px 16px;
@@ -62,8 +67,5 @@ export default {
   color: #c0d1ed;
   cursor: pointer;
 }
-
-
-
 
 </style>

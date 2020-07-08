@@ -21,6 +21,8 @@
             <button @click="setSubName" form="orderBy" type="submit" class="searchButton">Go</button>
         </form>
 
+        <slot></slot>
+
         <button @click="loadMore" class="searchButton">Load More</button>
     </div>
 </template>
@@ -98,11 +100,9 @@ export default {
     font-size: 20px;
     font-family: sans-serif;
     padding: 20px 0px;
-}
-
-.topDiv * {
-    display: inline-block;
-    vertical-align: top;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .searchTerm {
@@ -117,7 +117,6 @@ export default {
 }
 
 .searchButton {
-    width: 45px;
     height: 44px;
     border: 0px solid #6f7887;
     background: #6f7887;

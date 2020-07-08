@@ -1,14 +1,16 @@
 <template>
-
-<div>
-    <div class="SubNameDiv">
-      <h1 class="SubNameTitle">{{"/r/" + subreddit}}</h1>
-      <button v-if="!pinned" class="pinButton" type="submit" @click="pinSub">Pin Subreddit</button>
-      <button v-else class="pinButton">Pinned</button>
-    </div>
+  <div class="page">
     <SideBar v-on="$listeners" :sublist="sublist" />
-</div>
 
+    <div class="content">
+      <div class="subtitle">
+        <h1 class="SubNameTitle">{{"/r/" + subreddit}}</h1>
+        <button v-if="!pinned" class="pinButton" type="submit" @click="pinSub">Pin Subreddit</button>
+        <button v-else class="pinButton">Pinned</button>
+      </div>
+      <slot></slot>
+    </div>
+  </div>
 </template>
 
 
@@ -55,9 +57,19 @@ export default {
 
 
 <style>
-.SubNameDiv {
-    text-align: right;
-    padding: 0px 25px;
+.page {
+    display: flex;
+    flex-direction: row;
+}
+
+.content {
+    padding: 0;
+    padding-right: 15px;
+    width: 100%;
+}
+
+.subtitle {
+  text-align: right;
 }
 
 .SubNameTitle {
@@ -75,7 +87,5 @@ export default {
   align-self: auto;
   cursor: pointer;
 }
-
-
 
 </style>

@@ -1,15 +1,14 @@
 <template>
-  <div id="app">
-    <SubTitle :subreddit.sync="subreddit"/>
-
+  <SubTitle :subreddit.sync="subreddit">
     <Filters
       :subreddit.sync="subreddit"
       :order.sync="order"
       :limit.sync="options.limit"
-      :time.sync="options.time"/>
+      :time.sync="options.time">
 
-    <RedditImages v-bind="filters"/>
-  </div>
+      <RedditImages v-bind="filters"/>
+    </Filters>
+  </SubTitle>
 </template>
 
 <script>
@@ -55,12 +54,13 @@ export default {
 
 
 <style>
-#app {
+body {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  padding: 0;
+  margin: 0;
 }
 </style>

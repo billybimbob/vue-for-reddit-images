@@ -12,6 +12,7 @@
                     v-show="loadInfo[idxToKey(i)].updated && post!==focused" >
                     <!--must be img in button since input does not trigger load
                     show is false-->
+
                     <img :src="post.img" :alt="post.title"
                         :style="loadInfo[idxToKey(i)].style"
                         @load="imageSize(i, $event)" />
@@ -26,6 +27,7 @@
                         <h2>{{ focused.title }}</h2>
                     </a>
                     <input type="image" :src="focused.img" :alt="focused.title"/>
+                    <br/>
                     <a :href="focused.img" :download="focused.title">
                       <button type="submit">Download Image</button>
                     </a>
@@ -210,8 +212,7 @@ export default {
 
 <style scoped>
 .images {
-    width: 91%;
-    float: right;
+    width: 100%;
 }
 
 .image-grid {
@@ -221,13 +222,12 @@ export default {
     display: flex;
     flex-wrap: wrap;
     flex-direction: row;
-    justify-content: flex-start
+    justify-content: center;
+    align-items: center;
+    padding-right: 25px;
 }
 
 .small-tile {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     height: 200px;
     width: 200px;
     transition: all 200ms ease-in;
@@ -274,7 +274,6 @@ export default {
     top: 50%;
     left: 55%;
     transform: translate(-50%, -50%);
-    display: block;
     background: white;
     z-index: 2;
     margin: 0;
@@ -286,6 +285,7 @@ export default {
 .scroll-box {
     overflow-y: scroll;
     max-height: 95vh;
+    display: block;
 }
 
 .focus h2 {
