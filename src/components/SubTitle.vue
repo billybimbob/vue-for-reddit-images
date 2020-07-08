@@ -1,53 +1,39 @@
 <template>
-  <div class="page">
-    <SideBar v-on="$listeners" :sublist="sublist" />
-
-    <div class="content">
-      <div class="subtitle">
-        <h1 class="SubNameTitle">{{"/r/" + subreddit}}</h1>
-        <button v-if="!pinned" class="pinButton" type="submit" @click="pinSub">Pin Subreddit</button>
-        <button v-else class="pinButton">Pinned</button>
-      </div>
-      <slot></slot>
-    </div>
+  <div class="subtitle">
+    <h1 class="SubNameTitle">{{"/r/" + subreddit}}</h1>
+    <button v-if="!pinned" class="pinButton" type="submit" @click="pinSub">Pin Subreddit</button>
+    <button v-else class="pinButton">Pinned</button>
   </div>
 </template>
 
 
 <script>
-import SideBar from './SideBar'
-
 export default {
   name: 'SubTitle',
-  data ()
-  {
-    return {
-      sublist: []
-    }
-  },
-  components:
-  {
-    SideBar
-  },
   props:
   {
     subreddit:
     {
       type: String,
       default: "pics"
+    },
+    pins:
+    {
+      type: Array,
+      default() { return []; }
     }
   },
   computed:
   {
     pinned() {
-      return this.sublist.includes(this.subreddit)
+      return this.pins.includes(this.subreddit)
     }
   },
   methods:
   {
     pinSub() {
       if (!this.pinned) {
-        this.sublist.push(this.subreddit);
+        this.$emit('pin', this.subreddit);
       }
     }
   }
@@ -57,17 +43,6 @@ export default {
 
 
 <style>
-.page {
-    display: flex;
-    flex-direction: row;
-}
-
-.content {
-    padding: 0;
-    padding-right: 15px;
-    width: 100%;
-}
-
 .subtitle {
   text-align: right;
 }

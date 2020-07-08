@@ -1,12 +1,10 @@
 <template>
 
-<div class="sidebar">
-  <div class="sidebar-fixed">
-    <a href="#">Pinned subreddits</a>
-    <li v-for="sub in sublist" :key="sub" class="listText" @click="emitSub(sub)">
-      {{ "r/" + sub }}
-    </li>
-  </div>
+<div class="sidebar-fixed">
+  <a href="#">Pinned subreddits</a>
+  <li v-for="sub in pins" :key="sub" class="listText" @click="toSub(sub)">
+    {{ "r/" + sub }}
+  </li>
 </div>
 
 </template>
@@ -17,11 +15,12 @@ export default {
   name: 'SideBar',
   props:
   {
-    sublist: Array
+    subreddit: String,
+    pins: Array
   },
   methods:
   {
-    emitSub(sub) {
+    toSub(sub) {
       console.log("test");
       this.$emit('update:subreddit', sub);
     }
@@ -32,11 +31,6 @@ export default {
 
 
 <style scoped>
-.sidebar {
-  width: 20vw;
-  max-width: 180px;
-}
-
 .sidebar-fixed {
   height: 100vh;
   width: inherit;
@@ -48,7 +42,7 @@ export default {
   padding-top: 20px;
 }
 
-.sidebar a {
+.sidebar-fixed a {
   padding: 6px 8px 6px 16px;
   text-decoration: none;
   font-size: 25px;

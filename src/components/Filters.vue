@@ -20,10 +20,6 @@
             <input v-model="newsubname" placeholder="Enter subreddit name" class="searchTerm">
             <button @click="setSubName" form="orderBy" type="submit" class="searchButton">Go</button>
         </form>
-
-        <slot></slot>
-
-        <button @click="loadMore" class="searchButton">Load More</button>
     </div>
 </template>
 
@@ -46,12 +42,7 @@ export default {
     props: {
         subreddit: String,
         order: String,
-        time: String,
-        limit: Number,
-        morePosts: {
-            type: Number,
-            default: 10
-        }
+        time: String
     },
     computed: {
         sortNames() {
@@ -86,9 +77,6 @@ export default {
             //console.log("old name: " + this.subreddit, " new name: " + this.newsubname);
             console.log(this.newsubname);
             this.$emit('update:subreddit', this.newsubname);
-        },
-        loadMore() {
-            this.$emit('update:limit', this.limit+this.morePosts);
         }
     }
 }
@@ -100,9 +88,6 @@ export default {
     font-size: 20px;
     font-family: sans-serif;
     padding: 20px 0px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 .searchTerm {

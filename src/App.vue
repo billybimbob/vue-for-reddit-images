@@ -1,27 +1,43 @@
 <template>
-  <SubTitle :subreddit.sync="subreddit">
-    <Filters
-      :subreddit.sync="subreddit"
-      :order.sync="order"
-      :limit.sync="options.limit"
-      :time.sync="options.time">
+  <BasePage>
 
+    <template v-slot:sidebar>
+      <SideBar :subreddit.sync="subreddit" :pins="pins" />
+    </template>
+
+    <template v-slot:heading>
+      <SubTitle :subreddit="subreddit" :pins="pins" @pin="addPin"/>
+      <Filters
+        :subreddit.sync="subreddit"
+        :time.sync="options.time"
+        :order.sync="order"/>
+    </template>
+
+    <template v-slot:main>
       <RedditImages v-bind="filters"/>
-    </Filters>
-  </SubTitle>
+      <LoadMore :limit.sync="options.limit"/>
+    </template>
+
+  </BasePage>
 </template>
 
 <script>
+import BasePage from './components/BasePage'
+import SideBar from './components/SideBar'
 import SubTitle from './components/SubTitle'
 import Filters from './components/Filters'
 import RedditImages from './components/RedditImages'
+import LoadMore from './components/LoadMore'
 
 export default {
   name: 'App',
   components: {
+    BasePage,
+    SideBar,
     SubTitle,
     Filters,
-    RedditImages
+    RedditImages,
+    LoadMore
   },
 
   data() {
@@ -31,7 +47,8 @@ export default {
       options: {
         limit: this.defaultLimit(),
         time: 'day'
-      }
+      },
+      pins: []
     }
   },
   computed: {
@@ -46,7 +63,8 @@ export default {
     }
   },
   methods: {
-    defaultLimit() { return 10; }
+    defaultLimit() { return 10; },
+    addPin(sub) { this.pins.push(sub); }
   }
 }
 
