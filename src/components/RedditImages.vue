@@ -1,6 +1,6 @@
 <template>
     <!--
-        could limit posts to only render
+        could limit redditPosts to only render
         what's on screen
     -->
     <Gallery :posts="posts"/>
@@ -38,7 +38,7 @@ export default {
             requester: null,
             stream: {count: 0, after: null},
             cache: [],
-            posts: []
+            redditPosts: []
         }
     },
     props: {
@@ -53,7 +53,7 @@ export default {
         options: {
             type: Object,
             default() {
-                return {limit: 10};
+                return this.defaultOptions();
             },
             validator(value) {
                 return value.limit && value.limit>=0 &&
@@ -64,16 +64,15 @@ export default {
     computed: {
         fetchmod() {
             return 'fetchmod' in this.options
-                ? this.options.fetchmod : 10;
+                ? this.options.fetchmod
+                : this.defaultOptions().fetchmod;
         },
         settings() { //normalized options props
             const normal = {
-                time: 'day',
+                ...this.defaultOptions(),
                 ...this.options
             };
-            //console.log(normal);
             delete normal.fetchmod;
-            //console.log(normal);
             return normal;
         },
         // to watch multiple prop vals
@@ -85,15 +84,29 @@ export default {
         filterProps() {
             const {subreddit, order, settings} = this;
             return {subreddit, order, settings};
+        },
+
+        posts() {
+            return this.redditPosts.map(post => ({
+                title: post.title, 
+                img: post.url,
+                url: reddit + post.permalink
+            }));
         }
     },
 
     watch: {
-        resetProps() {
-            console.log('reseting')
-            this.posts = [];
-            this.cache = [];
-            this.stream = {count: 0, after: null};
+        resetProps(newProps, oldProps) {
+            let sameVals = true;
+            for (let prop in newProps) { //not great
+                sameVals = sameVals && newProps[prop]===oldProps[prop];
+            }
+            if (!sameVals) {
+                console.log('reseting')
+                this.redditPosts = [];
+                this.cache = [];
+                this.stream = {count: 0, after: null};
+            }
         },
         filterProps: { //should run after reset
             handler() {
@@ -106,6 +119,10 @@ export default {
     },
 
     methods: {
+        defaultOptions() {
+            return {limit: 10, time: 'any', fetchmod: 10}
+        },
+
         getRequester() {
             const username = CryptoJS.AES
                 .decrypt(secrets.username, secrets.clientId)
@@ -126,14 +143,9 @@ export default {
         async fetchImages(fetchPosts, {target=1}) {
             const images = [...this.cache]; //copy cache
 
-            const filterImages = (posts) => (posts
-                .filter(post => post.author.name!=='[deleted]'
+            const filterImages = (redditPosts) => (
+                redditPosts.filter(post => post.author.name!=='[deleted]'
                     && imageExts.has(getExtension(post.url)) )
-                .map(post => ({
-                    title: post.title, 
-                    img: post.url,
-                    url: reddit + post.permalink
-                }))
             )
 
             let tries = 0;
@@ -148,13 +160,13 @@ export default {
 
         async setPosts() { //modifies data values
             const runId = this.runCount;
-            const target = this.settings.limit - this.posts.length;
+            const target = this.settings.limit - this.redditPosts.length;
 
             if (target === 0) {
                 return;
             } else if (target < 0) {
                 this.checkedChange(() => {
-                    this.cache.unshift( ...this.posts.splice(target) );
+                    this.cache.unshift( ...this.redditPosts.splice(target) );
                 }, {runId});
                 return;
             }
@@ -191,7 +203,7 @@ export default {
                 }
 
                 this.stream = {count, after};
-                this.posts.push(...images);
+                this.redditPosts.push(...images);
 
             }, {runId});
         }
@@ -199,9 +211,9 @@ export default {
 
     beforeCreate() {
         this.updatePosts = throttle(() => { //prevent excess calls
-            //console.log('fetching')
             this.runCount++;
             this.setPosts()
+                //.then(console.log('finished updating'))
                 .catch(error => {
                     console.log('issue fetching data:')
                     console.log(error)

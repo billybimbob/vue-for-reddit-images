@@ -1,17 +1,17 @@
 <template>
-    <div class="images" @click="clearFocus">
+    <div class="images">
         <h2 v-if="posts.length == 0">Loading images</h2>
         <h2 v-else>Showing {{ posts.length }} images</h2>
 
-        <ul class="image-grid" v-if="posts.length!==0">
+        <ul v-if="posts.length!==0" class="image-grid">
             <li v-for="(post, i) in posts" :key="post.url"
                 class="small-tile" :class="{'active': post===focused}"
                 :disabled="loaded<posts.length"
             >
                 <input v-if="post!==focused"
                     type="image" :src="post.img" :alt="post.title"
+                    :style="loadInfo[post.img].style"
                     @click.stop="imageClick" :value="i"
-                    :style="imageStyles[i].style"
                     @[initialLoad(i)]="imageSize" />
             </li>
         </ul>
@@ -46,7 +46,7 @@ import rightArrow from '../assets/right-arrow.svg'
 export default {
     data() {
         return {
-            imageStyles: [],
+            loadInfo: {},
             loaded: 0,
             arrow: {
                 left: leftArrow,
@@ -73,26 +73,47 @@ export default {
     },
 
     watch: {
-        loaded() {
-            if (this.loaded === this.posts.length) {
-                console.log('forcing update')
-                this.$forceUpdate();
-            }
-        },
         posts: {
             handler() {
                 this.clearFocus();
-                this.imageStyles = this.posts.map(() => ({
-                    style: {maxHeight: '100%', maxWidth: '100%'},
-                    updated: false
-                }));
-                this.loaded = 0;
+                const newImages = this.updateLoads();
+                this.loaded = this.posts.length - newImages;
             },
             immediate: true
-        }
+        },
+        /*loaded() {
+            const len = this.posts.length;
+            if (len > 0 && this.loaded === len) {
+                console.log('forcing update')
+                this.$forceUpdate();
+            }
+        }*/
     },
 
     methods: {
+        updateLoads() { //returns the amount of new iamges
+            const ids = this.posts.map(post => post.img);
+            let newImages = 0;
+
+            this.loadInfo = ids.reduce((infos, id) => {
+                if (id in infos)
+                    return infos;
+                else {
+                    newImages += 1;
+                    return {...infos, [id]: {
+                        style: {maxHeight: '100%', maxWidth: '100%'},
+                        updated: false
+                    }};
+                }
+            }, this.loadInfo);
+            
+            return newImages;
+        },
+
+        idxToKey(idx) {
+            return this.posts[idx].img;
+        },
+
         clearFocus() {
             this.trans = "fade";
             this.$nextTick(() => { //not sure why just for this one
@@ -100,15 +121,16 @@ export default {
             })
         },
         initialLoad(idx) {
-            return this.imageStyles[idx].updated ? null : 'load';
+            return this.loadInfo[this.idxToKey(idx)].updated ? null : 'load';
         },
+
         imageSize(event) {
             const input = event.target;
             const imgIdx = input.value;
             const boundDim = input.width > input.height
                 ? 'maxHeight' : 'maxWidth';
 
-            this.imageStyles[imgIdx] = {
+            this.loadInfo[this.idxToKey(imgIdx)] = {
                 style: {[boundDim]: '100%'},
                 updated: true
             };
@@ -162,9 +184,11 @@ export default {
     //add event listener for arrow keys
     mounted() {
         window.addEventListener('keyup', this.arrowKey);
+        window.addEventListener('click', this.clearFocus);
     },
     beforeDestroy() {
         window.removeEventListener('keyup', this.arrowKey);
+        window.removeEventListener('click', this.clearFocus);
     }
 }
 </script>

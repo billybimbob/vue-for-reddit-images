@@ -5,6 +5,7 @@
     <Filters
       :subreddit.sync="subreddit"
       :order.sync="order"
+      :limit.sync="options.limit"
       :time.sync="options.time"/>
 
     <RedditImages v-bind="filters"/>
@@ -29,7 +30,7 @@ export default {
       subreddit: "pics",
       order: "hot",
       options: {
-        limit: 10,
+        limit: this.defaultLimit(),
         time: 'day'
       }
     }
@@ -39,6 +40,14 @@ export default {
       const {subreddit, order, options} = this;
       return {subreddit, order, options};
     }
+  },
+  watch: {
+    filters() {
+      this.options.limit = this.defaultLimit();
+    }
+  },
+  methods: {
+    defaultLimit() { return 10; }
   }
 }
 
