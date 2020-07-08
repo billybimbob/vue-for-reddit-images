@@ -8,11 +8,14 @@
                 class="small-tile" :class="{'active': post===focused}"
                 :disabled="loaded<posts.length"
             >
-                <input v-if="post!==focused"
-                    type="image" :src="post.img" :alt="post.title"
-                    :style="loadInfo[post.img].style"
-                    @click.stop="imageClick" :value="i"
-                    @[initialLoad(i)]="imageSize" />
+                <button @click.stop="imageClick(i)"
+                    v-show="loadInfo[idxToKey(i)].updated && post!==focused" >
+                    <!--must be img in button since input does not trigger load
+                    show is false-->
+                    <img :src="post.img" :alt="post.title"
+                        :style="loadInfo[idxToKey(i)].style"
+                        @load="imageSize(i, $event)" />
+                </button>
             </li>
         </ul>
 
@@ -31,8 +34,14 @@
         </transition>
         <transition name="appear">
             <div v-if="focused" class="buttons">
-                <img class="left" @click.stop="prevImage" :src="arrow.left"/>
-                <img class="right" @click.stop="nextImage" :src="arrow.right">
+                <transition name="appear" appear>
+                    <img v-if="focused && lookIdx>0"
+                        class="left" @click.stop="prevImage" :src="arrow.left"/>
+                </transition>
+                <transition name="appear" appear>
+                    <img v-if="focused && lookIdx<posts.length-1"
+                        class="right" @click.stop="nextImage" :src="arrow.right">
+                </transition>
             </div>
         </transition>
     </div>
@@ -50,7 +59,7 @@ export default {
             loaded: 0,
             arrow: {
                 left: leftArrow,
-                right: rightArrow,
+                right: rightArrow
             },
             trans: "fade",
             lookIdx: null,
@@ -121,12 +130,13 @@ export default {
             })
         },
         initialLoad(idx) {
-            return this.loadInfo[this.idxToKey(idx)].updated ? null : 'load';
+            const load = this.loadInfo[this.idxToKey(idx)].updated ? null : 'load';
+            console.log(idx, load);
+            return load;
         },
 
-        imageSize(event) {
+        imageSize(imgIdx, event) {
             const input = event.target;
-            const imgIdx = input.value;
             const boundDim = input.width > input.height
                 ? 'maxHeight' : 'maxWidth';
 
@@ -137,12 +147,12 @@ export default {
             this.loaded += 1;
             //this.$forceUpdate();
         },
-        imageClick(event) {
-            if (this.focused === this.posts[event.target.value]) {
+        imageClick(imgIdx) {
+            if (this.focused === this.posts[imgIdx]) {
                 this.clearFocus();
             } else {
                 const prevIdx = this.lookIdx;
-                const nextIdx = parseInt(event.target.value);
+                const nextIdx = parseInt(imgIdx);
                 if (prevIdx!==null) {
                     this.trans = prevIdx > nextIdx
                         ? "from-left" : "from-right";
@@ -152,13 +162,17 @@ export default {
         },
 
         prevImage() {
-            const postLen = this.posts.length;
-            this.trans = "from-left";
-            this.lookIdx = (this.lookIdx-1 + postLen) % postLen;
+            if (this.lookIdx>0) {
+                const postLen = this.posts.length;
+                this.trans = "from-left";
+                this.lookIdx = (this.lookIdx-1 + postLen) % postLen;
+            }
         },
         nextImage() {
-            this.trans = "from-right";
-            this.lookIdx = (this.lookIdx+1) % this.posts.length;
+            if (this.lookIdx<this.posts.length-1) {
+                this.trans = "from-right";
+                this.lookIdx = (this.lookIdx+1) % this.posts.length;
+            }
         },
 
 
@@ -231,6 +245,21 @@ export default {
 
 .small-tile.active:focus-within {
     box-shadow: 0 0 0 black;
+}
+
+.small-tile button {
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    outline: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.small-tile button:hover {
+    cursor: pointer;
 }
 
 .small-tile input:focus,
