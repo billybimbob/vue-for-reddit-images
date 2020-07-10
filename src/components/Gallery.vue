@@ -4,17 +4,18 @@
         <h2 v-else>Showing {{ posts.length }} images</h2>
 
         <ul v-if="posts.length!==0" class="image-grid">
-            <li v-for="(post, i) in posts" :key="post.url"
-                class="small-tile" :class="{'active': post===focused}"
+            <li v-for="({post, info}, i) in loadPosts"
+                :key="post.url" :id="idxToKey(i)" ref="grid"
+                :class="['small-tile', {'active': post===focused}]"
                 :disabled="loaded<posts.length"
             >
-                <button @click.stop="imageClick(i)"
-                    v-show="loadInfo[idxToKey(i)].updated && post!==focused" >
+                <button @click.stop="imageClick(i, $event)"
+                    v-if="info.observing===false" v-show="info.updated">
                     <!--must be img in button since input does not trigger load
-                    show is false-->
+                    when show is false-->
 
                     <img :src="post.img" :alt="post.title"
-                        :style="loadInfo[idxToKey(i)].style"
+                        :style="info.style"
                         @load="imageSize(i, $event)" />
                 </button>
             </li>
@@ -37,12 +38,12 @@
         <transition name="appear">
             <div v-if="focused" class="buttons">
                 <transition name="appear" appear>
-                    <img v-if="focused && lookIdx>0"
+                    <img v-if="lookIdx>0"
                         class="left" @click.stop="prevImage" :src="arrow.left"/>
                 </transition>
                 <transition name="appear" appear>
-                    <img v-if="focused && lookIdx<posts.length-1"
-                        class="right" @click.stop="nextImage" :src="arrow.right">
+                    <img v-if="lookIdx<posts.length-1"
+                        class="right" @click.stop="nextImage" :src="arrow.right"/>
                 </transition>
             </div>
         </transition>
@@ -65,6 +66,10 @@ export default {
             },
             trans: "fade",
             lookIdx: null,
+            lazy: {
+                observer: null,
+                watchAmnt: 5
+            }
         }
     },
     props: {
@@ -80,6 +85,12 @@ export default {
             return this.lookIdx!==null
                 ? this.posts[this.lookIdx]
                 : null;
+        },
+        loadPosts() {
+            return this.posts.map((post, i) => ({
+                post,
+                info: this.loadInfo[this.idxToKey(i)]
+            }));
         }
     },
 
@@ -91,7 +102,7 @@ export default {
                 this.loaded = this.posts.length - newImages;
             },
             immediate: true
-        },
+        }
         /*loaded() {
             const len = this.posts.length;
             if (len > 0 && this.loaded === len) {
@@ -113,7 +124,8 @@ export default {
                     newImages += 1;
                     return {...infos, [id]: {
                         style: {maxHeight: '100%', maxWidth: '100%'},
-                        updated: false
+                        updated: false,
+                        observing: false
                     }};
                 }
             }, this.loadInfo);
@@ -121,20 +133,17 @@ export default {
             return newImages;
         },
 
-        idxToKey(idx) {
-            return this.posts[idx].img;
-        },
+        idxToKey(idx) { return this.posts[idx].img; },
 
-        clearFocus() {
+        clearFocus(event) {
             this.trans = "fade";
             this.$nextTick(() => { //not sure why just for this one
                 this.lookIdx = null;
             })
-        },
-        initialLoad(idx) {
-            const load = this.loadInfo[this.idxToKey(idx)].updated ? null : 'load';
-            console.log(idx, load);
-            return load;
+            if (event && event.target && this.$el.contains(event.target)) {
+                event.target.blur();
+            }
+                
         },
 
         imageSize(imgIdx, event) {
@@ -142,16 +151,16 @@ export default {
             const boundDim = input.width > input.height
                 ? 'maxHeight' : 'maxWidth';
 
-            this.loadInfo[this.idxToKey(imgIdx)] = {
-                style: {[boundDim]: '100%'},
-                updated: true
-            };
+            const info = this.loadInfo[this.idxToKey(imgIdx)];
+            info.style = {[boundDim]: '100%'};
+            info.updated = true;
+
             this.loaded += 1;
             //this.$forceUpdate();
         },
-        imageClick(imgIdx) {
+        imageClick(imgIdx, event) {
             if (this.focused === this.posts[imgIdx]) {
-                this.clearFocus();
+                this.clearFocus(event);
             } else {
                 const prevIdx = this.lookIdx;
                 const nextIdx = parseInt(imgIdx);
@@ -165,15 +174,14 @@ export default {
 
         prevImage() {
             if (this.lookIdx>0) {
-                const postLen = this.posts.length;
                 this.trans = "from-left";
-                this.lookIdx = (this.lookIdx-1 + postLen) % postLen;
+                this.lookIdx -= 1;
             }
         },
         nextImage() {
             if (this.lookIdx<this.posts.length-1) {
                 this.trans = "from-right";
-                this.lookIdx = (this.lookIdx+1) % this.posts.length;
+                this.lookIdx += 1;
             }
         },
 
@@ -188,21 +196,56 @@ export default {
                         this.nextImage();
                         break;
                     case 'Escape':
-                        this.clearFocus();
+                        this.clearFocus(event);
                         break;
                     default:
                         break;
                 }
             }
+        },
+
+        observeImages() {
+            if (this.lazy.observer && this.$refs.grid) {
+                //console.log('adding observers')
+                this.$refs.grid
+                    .map(li => ({li, info: this.loadInfo[li.id]}))
+                    .filter(({info}) => !info.updated)
+                    .forEach(({li, info}) => {
+                        info.observing = true;
+                        this.lazy.observer.observe(li);
+                    });
+                //console.log(this.lazy.observer);
+            }    
         }
     },
 
+    created() {
+        if ('IntersectionObserver' in window) { //add lazy loading
+            this.lazy.observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach((entry) => {
+                    if (entry.intersectionRatio > 0) {
+                        this.loadInfo[entry.target.id].observing = false;
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {threshold: 0.2});
+        }
+    },
     //add event listener for arrow keys
     mounted() {
+        this.observeImages();
         window.addEventListener('keyup', this.arrowKey);
         window.addEventListener('click', this.clearFocus);
     },
+
+    updated() {
+        this.observeImages()
+    },
+
     beforeDestroy() {
+        if (this.lazy.observer) {
+            this.lazy.observer.disconnect();
+        }
         window.removeEventListener('keyup', this.arrowKey);
         window.removeEventListener('click', this.clearFocus);
     }
@@ -234,8 +277,10 @@ export default {
     overflow: hidden;
 }
 
-.small-tile:focus-within {
+.small-tile:focus-within,
+.small-tile:hover  {
     box-shadow: 0 0 25px black;
+    transform: scale(1.1);
 }
 
 .small-tile.active {
@@ -260,13 +305,6 @@ export default {
 
 .small-tile button:hover {
     cursor: pointer;
-}
-
-.small-tile input:focus,
-.small-tile input:active,
-.small-tile:hover {
-    outline: none;
-    box-shadow: 0 0 25px black;
 }
 
 .focus {

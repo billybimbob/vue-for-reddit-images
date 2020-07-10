@@ -14,8 +14,7 @@ import throttle from 'lodash.throttle';
 import secrets from '../secrets.json';
 import Gallery from './Gallery';
 
-const imageExts = new Set();
-["jpeg", "jpg", "png", "gif", 'tiff', 'bmp'].forEach(ext => imageExts.add(ext));
+const imageExts = new Set(["jpeg", "jpg", "png", "gif", 'tiff', 'bmp']);
 
 const getExtension = (filename) => (
     filename
@@ -141,18 +140,28 @@ export default {
         },
 
         async fetchImages(fetchPosts, {target=1}) {
-            const images = [...this.cache]; //copy cache
+            const images = []; //copy cache
+            const uniques = new Set();
+
+            const addImages = (adding) => {
+                images.push(...adding);
+                adding.map(add => add.url)
+                    .forEach(url => uniques.add(url));
+            }
 
             const filterImages = (redditPosts) => (
                 redditPosts.filter(post => post.author.name!=='[deleted]'
+                    && !uniques.has(post.url)
                     && imageExts.has(getExtension(post.url)) )
             )
+
+            addImages(this.cache);
 
             let tries = 0;
             const MAX_TRIES = 5;
             while(images.length < target && tries++ < MAX_TRIES) {
                 const fetched = await fetchPosts();
-                images.push(...filterImages(fetched));
+                addImages(filterImages(fetched));
             }
 
             return images;
@@ -179,6 +188,7 @@ export default {
             const limit = target + this.fetchmod;
             let { count, after } = this.stream;
 
+            // potential issue when api posts order changes
             const fetchPosts = async () => {
                 console.log('requesting')
                 const fetched = await subRef[orderFunct]({
