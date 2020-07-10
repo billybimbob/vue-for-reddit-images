@@ -10,16 +10,17 @@
                 :class="['small-tile',
                     {'visible': info.updated, 'active': post===focused}]" >
 
-                <transition name="appear">
+                <transition name="fade">
+                    <!--v-if used to start image load or not-->
                     <button v-if="info.observing===false" v-show="info.updated"
                         @click.stop="imageClick(i, $event)" >
 
                         <!--must be img in button since input does not trigger load
-                        when show is false-->
+                        when v-show is false-->
 
                         <img :src="post.img" :alt="post.title"
                             :style="info.style"
-                            @load="imageSize(i, $event)" />
+                            @load="imageLoad(i, $event)" />
                     </button>
                 </transition>
             </li>
@@ -40,13 +41,13 @@
                 </div>
             </div>
         </transition>
-        <transition name="appear">
+        <transition name="fade">
             <div v-if="focused" class="buttons">
-                <transition name="appear" appear>
+                <transition name="fade" appear>
                     <img v-if="lookIdx>0"
                         class="left" @click.stop="prevImage" :src="arrow.left"/>
                 </transition>
-                <transition name="appear" appear> <!--transition not working-->
+                <transition name="fade" appear> <!--transition not working-->
                     <img v-if="lookIdx<posts.length-1"
                         class="right" @click.stop="nextImage" :src="arrow.right"/>
                 </transition>
@@ -64,11 +65,12 @@ export default {
     data() {
         return {
             loadInfo: {},
+            loaded: 0,
             arrow: {
                 left: leftArrow,
                 right: rightArrow
             },
-            trans: "fade",
+            trans: "appear",
             lookIdx: null,
             lazy: {
                 observer: null,
@@ -105,29 +107,50 @@ export default {
                 this.updateLoads();
             },
             immediate: true
+        },
+        loaded() {
+            // can emit to auto load more posts
+            if (this.loaded === this.posts.length) {
+                console.log('loaded all')
+            }
         }
     },
 
     methods: {
-        updateLoads() { //returns the amount of new iamges
-            this.loadInfo = this.posts.reduce((infos, post) => {
+        newLoadInfo: () => ({
+            style: {maxHeight: '100%', haxWidth: '100%'},
+            updated: false,
+            observing: true
+        }),
+
+        updateLoads() {
+            //removes images no longer present
+            const postIds = new Set(this.posts.map(post => post.id));
+            this.loadInfo = Object.entries(this.loadInfo).reduce((loads, [id, info]) => {
+                return !postIds.has(id)
+                    ? loads
+                    : {...loads, [id]: info};
+            }, {});
+            
+            //adds new images
+            let newImages = 0;
+            this.loadInfo = this.posts.reduce((loads, post) => {
                 const id = post.id;
-                if (id in infos) {
-                    return infos
+                if (id in loads) {
+                    return loads;
                 } else {
-                    return {...infos, [id]: {
-                        style: {maxHeight: '100%', maxWidth: '100%'},
-                        updated: false,
-                        observing: false
-                    }};
+                    newImages += 1;
+                    return {...loads, [id]: this.newLoadInfo()};
                 }
             }, this.loadInfo);
+            
+            this.loaded = this.posts.length - newImages;
         },
 
         clearFocus(event) {
-            this.trans = "fade";
+            this.trans = "appear";
 
-            // not sure why just for this one
+            // not sure why just this one needs nextTick
             this.$nextTick(() => {
                 this.lookIdx = null;
             })
@@ -137,16 +160,19 @@ export default {
                 
         },
 
-        imageSize(idx, event) {
+        imageLoad(idx, event) {
             const input = event.target;
             const boundDim = input.width > input.height
                 ? 'maxHeight' : 'maxWidth';
 
             const id = this.posts[idx].id;
             const info = this.loadInfo[id];
+            //console.log(`loaded ${idx}`)
 
             info.style = {[boundDim]: '100%'};
             info.updated = true;
+
+            this.loaded += 1;
         },
 
         imageClick(imgIdx, event) {
@@ -199,12 +225,18 @@ export default {
             if (this.lazy.observer && this.$refs.grid) {
                 this.$refs.grid
                     .map(li => ({ li, info: this.loadInfo[li.dataset.id] }))
-                    .filter(({info}) => !info.updated)
-                    .forEach(({li, info}) => {
-                        info.observing = true;
+                    .filter(({info}) => info.observing)
+                    .forEach(({li}) => {
+                        //const id = li.dataset.id; 
+                        //const ids = this.posts.map(post => post.id)
+                        //console.log(`started observing ${ids.indexOf(id)}`)
                         this.lazy.observer.observe(li);
                     });
-            }    
+            } else {
+                Object.values(this.loadInfo).forEach(info => {
+                    info.observing = false;
+                });
+            }   
         }
     },
 
@@ -213,7 +245,10 @@ export default {
             this.lazy.observer = new IntersectionObserver((entries, observer) => {
                 entries.forEach((entry) => {
                     if (entry.intersectionRatio > 0) {
-                        this.loadInfo[entry.target.dataset.id].observing = false;
+                        const id = entry.target.dataset.id;
+                        //const ids = this.posts.map(post => post.id)
+                        //console.log(`stopped observing ${ids.indexOf(id)}`)
+                        this.loadInfo[id].observing = false;
                         observer.unobserve(entry.target);
                     }
                 });
@@ -382,19 +417,19 @@ export default {
     transform: translate(-100vw, -50%);
 }
 
-.fade-enter-active, .fade-leave-active {
+.appear-enter-active, .appear-leave-active {
     transition: all .5s;
 }
-.fade-enter, .fade-leave-to {
+.appear-enter, .appear-leave-to {
     opacity: 0;
     transform: translate(-50%, -50%);
 }
 
-.appear-enter-active, .appear-leave-active {
+.fade-enter-active, .fade-leave-active {
     transition: opacity .5s;
 }
 
-.appear-enter, .appear-leave-to {
+.fade-enter, .fade-leave-to {
     opacity: 0;
 }
 </style>

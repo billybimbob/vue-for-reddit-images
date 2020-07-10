@@ -14,7 +14,7 @@
     </template>
 
     <template v-slot:main>
-      <RedditImages v-bind="filters"/>
+      <RedditImages :subreddit="subreddit" :order="order" :options="options"/>
       <LoadMore :limit.sync="options.limit"/>
     </template>
 
