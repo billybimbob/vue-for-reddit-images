@@ -87,6 +87,7 @@ export default {
 
         posts() {
             return this.redditPosts.map(post => ({
+                id: post.id,
                 title: post.title, 
                 img: post.url,
                 url: reddit + post.permalink
@@ -145,13 +146,13 @@ export default {
 
             const addImages = (adding) => {
                 images.push(...adding);
-                adding.map(add => add.url)
-                    .forEach(url => uniques.add(url));
+                adding.map(add => add.id)
+                    .forEach(id => uniques.add(id));
             }
 
             const filterImages = (redditPosts) => (
                 redditPosts.filter(post => post.author.name!=='[deleted]'
-                    && !uniques.has(post.url)
+                    && !uniques.has(post.id)
                     && imageExts.has(getExtension(post.url)) )
             )
 
@@ -223,7 +224,7 @@ export default {
         this.updatePosts = throttle(() => { //prevent excess calls
             this.runCount++;
             this.setPosts()
-                //.then(console.log('finished updating'))
+                //.then(() => console.log('finished updating'))
                 .catch(error => {
                     console.log('issue fetching data:')
                     console.log(error)

@@ -1,5 +1,5 @@
 <template>
-    <button @click="loadMore" class="searchButton">Load More</button>
+    <button @click="loadMore" class="load">Load More</button>
 </template>
 
 <script>
@@ -20,7 +20,7 @@ export default {
 </script>
 
 <style scoped>
-.searchButton {
+.load {
     height: 44px;
     border: 0px solid #6f7887;
     background: #6f7887;

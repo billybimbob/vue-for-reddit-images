@@ -1,17 +1,15 @@
 <template>
-    <div class="topDiv">
+    <div class="filters">
         <select :value="order" @change="orderChange" class="sortSelect">
             <option v-for="(option, i) in sortBy"
-                :value="option.name" :key="option.name"
-            >
+                :value="option.name" :key="option.name" >
                 {{ sortNames[i] }}
             </option>
         </select>
 
         <select v-if="timed" :value="time" @change="timeChange" class="sortSelect">
             <option v-for="(interval, i) in times"
-                :value="interval" :key="interval"
-            >
+                :value="interval" :key="interval" >
                 {{ timeNames[i] }}
             </option>
         </select>
@@ -84,10 +82,11 @@ export default {
 
 
 <style scoped>
-.topDiv {
+.filters {
     font-size: 20px;
     font-family: sans-serif;
-    padding: 20px 0px;
+    padding: 20px 30px 20px 0px;
+    display: inline-flex;
 }
 
 .searchTerm {
