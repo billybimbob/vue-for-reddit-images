@@ -3,16 +3,11 @@
         <h2 v-if="posts.length == 0">Loading images</h2>
         <h2 v-else>Showing {{ posts.length }} images</h2>
 
-        <ul v-if="posts.length!==0" class="image-grid">
-            <li is="TileImage" ref="list"
-                v-for="(post, i) in loadPosts"
-                :key="post.id" 
-                :dataId.prop="post.id" 
-                :post="post"
-                :active="i===lookIdx"
-                @click="imageClick(i)" @load="imageLoad(i, $event)"
-            />
-        </ul>
+        <!--tight coupling between Images and Gallery-->
+        <Images ref="images" 
+            :posts="loadPosts" :lookIdx="lookIdx"
+            @click="imageClick" @load="imageLoad"
+        />
 
         <FocusImage :lookIdx.sync="lookIdx" :posts="posts"/>
     </div>
@@ -20,12 +15,12 @@
 
 
 <script>
-import TileImage from './TileImage';
+import Images from './Images';
 import FocusImage from './FocusImage';
 
 export default {
     components: {
-        TileImage,
+        Images,
         FocusImage
     },
     data() {
@@ -82,7 +77,7 @@ export default {
     },
 
     methods: {
-        getImages() { return this.$refs.list; },
+        getImages() { return this.$refs.images.getImages(); },
 
         newLoadInfo: () => ({
             style: {maxHeight: '100%', haxWidth: '100%'},
@@ -114,22 +109,18 @@ export default {
             this.loaded = this.posts.length - newImages;
         },
 
-        imageLoad(idx, event) {
-            const input = event.target;
-            const boundDim = input.width > input.height
-                ? 'maxHeight' : 'maxWidth';
-
+        imageLoad({idx, target: img}) {
             const id = this.posts[idx].id;
-            const info = this.loadInfo[id];
-            //console.log(`loaded ${idx}`)
+            const info = this.loadInfo[id]
+            const boundDim = img.width > img.height
+                ? 'maxHeight' : 'maxWidth';
 
             info.style = {[boundDim]: '100%'};
             info.show = true;
-
             this.loaded += 1;
         },
 
-        imageClick(imgIdx) {
+        imageClick({idx: imgIdx}) {
             this.lookIdx = imgIdx;
         }
     }
@@ -140,18 +131,6 @@ export default {
 <style>
 .viewer {
     width: 100%;
-}
-
-.image-grid {
-    list-style: none;
-    line-height: 0;
-    flex: 20%;
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    margin-left: 7%
 }
 
 .fade-enter-active, .fade-leave-active {

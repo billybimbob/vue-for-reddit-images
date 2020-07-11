@@ -1,6 +1,6 @@
 <template>
     <!--
-        could limit redditPosts to only render
+        limit redditPosts to only render
         what's on screen
     -->
     <LazyGallery :posts="posts" @moreposts="morePosts"/>
