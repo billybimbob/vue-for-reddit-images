@@ -1,11 +1,11 @@
 <template>
   <BasePage>
 
-    <template v-slot:sidebar>
+    <template #sidebar>
       <SideBar :subreddit.sync="subreddit" :pins="pins" />
     </template>
 
-    <template v-slot:heading>
+    <template #heading>
       <SubTitle :subreddit="subreddit" :pins="pins" @pin="addPin"/>
       <Filters
         :subreddit.sync="subreddit"
@@ -13,8 +13,9 @@
         :order.sync="order"/>
     </template>
 
-    <template v-slot:main>
-      <RedditImages :subreddit="subreddit" :order="order" :options="options"/>
+    <template #main>
+      <RedditImages :subreddit="subreddit" :order="order"
+        :options="options" @update:limit="setLimit"/>
       <LoadMore :limit.sync="options.limit"/>
     </template>
 
@@ -64,7 +65,8 @@ export default {
   },
   methods: {
     defaultLimit() { return 10; },
-    addPin(sub) { this.pins.push(sub); }
+    addPin(sub) { this.pins.push(sub); },
+    setLimit(limit) { this.options.limit = limit; }
   }
 }
 

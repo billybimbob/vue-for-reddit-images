@@ -32,15 +32,16 @@
 
 
 <script>
-import left from '../assets/left-arrow.svg'
-import right from '../assets/right-arrow.svg'
+import left from '../../assets/left-arrow.svg'
+import right from '../../assets/right-arrow.svg'
 
 export default {
     data() {
         return {
             left,
             right,
-            trans: 'appear'
+            trans: 'appear',
+            timer: null
         }
     },
     props: {
@@ -65,6 +66,17 @@ export default {
             if (currIdx!==-1 && prevIdx!==-1) {
                 this.trans = prevIdx > currIdx
                     ? "from-left" : "from-right";
+            }
+        },
+        focused() {
+            if (this.focused!==null) {
+                if (this.timer!==null) {
+                    clearInterval(this.timer);
+                }
+                this.timer = setInterval(() => this.nextImage(), 10000);
+
+            } else if (this.timer!==null) {
+                clearInterval(this.timer);
             }
         }
     },

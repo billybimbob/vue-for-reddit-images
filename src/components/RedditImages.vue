@@ -3,7 +3,7 @@
         could limit redditPosts to only render
         what's on screen
     -->
-    <Gallery :posts="posts"/>
+    <LazyGallery :posts="posts" @moreposts="morePosts"/>
 </template>
 
 
@@ -12,7 +12,7 @@ import CryptoJS from 'crypto-js';
 import snoowrap from 'snoowrap';
 import throttle from 'lodash.throttle';
 import secrets from '../secrets.json';
-import Gallery from './Gallery';
+import LazyGallery from './gallery/LazyGallery';
 
 const imageExts = new Set(["jpeg", "jpg", "png", "gif", 'tiff', 'bmp']);
 
@@ -28,7 +28,7 @@ const reddit = "//reddit.com";
 
 export default {
     components: {
-        Gallery
+        LazyGallery
     },
 
     data() {
@@ -133,6 +133,10 @@ export default {
                 .toString(CryptoJS.enc.Utf8);
 
             return new snoowrap({...secrets, username, password});
+        },
+
+        morePosts() {
+            this.$emit('update:limit', this.settings.limit+this.fetchmod);
         },
 
         checkedChange(changeCallback, {runId}) {

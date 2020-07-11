@@ -67,6 +67,7 @@ export default {
             // can emit to auto load more posts
             if (this.loaded === this.posts.length) {
                 console.log('loaded all')
+                this.$emit('moreposts');
             }
         }
     },
@@ -124,14 +125,14 @@ export default {
         observeImages() {
             if (this.lazy.observer && this.$refs.grid) {
                 this.$refs.grid
-                    .map(image => image.$el)
-                    .map(li => ({ li, info: this.loadInfo[li.dataset.id] }))
+                    .map(image => image.$el) //assume el has a data-id attr
+                    .map(el => ({ el, info: this.loadInfo[el.dataset.id] }))
                     .filter(({info}) => info.observing)
-                    .forEach(({li}) => {
+                    .forEach(({el}) => {
                         //const id = li.dataset.id; 
                         //const ids = this.posts.map(post => post.id)
                         //console.log(`started observing ${ids.indexOf(id)}`)
-                        this.lazy.observer.observe(li);
+                        this.lazy.observer.observe(el);
                     });
             } else {
                 Object.values(this.loadInfo).forEach(info => {
