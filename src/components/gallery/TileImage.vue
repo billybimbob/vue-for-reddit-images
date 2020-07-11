@@ -1,17 +1,15 @@
 <template>
-    <li :data-id="post.id"
-        :class="['small-tile', {'visible': status.updated, 'active': active}]"
-    >
+    <li :class="['small-tile', {'visible': post.show, 'active': active}]">
         <transition name="fade">
             <!--v-if used to start image load or not-->
-            <button v-if="status.observing===false" v-show="status.updated"
+            <button v-if="post.render" v-show="post.render && post.show"
                 @click.stop="imageClick" >
 
                 <!--must be img in button since input does not trigger load
                 when v-show is false-->
 
                 <img :src="post.img" :alt="post.title"
-                    :style="status.style" @load="imageLoad" />
+                    :style="post.style" @load="imageLoad" />
             </button>
         </transition>
     </li>
@@ -22,10 +20,6 @@
 export default {
     props: {
         post: {
-            type: Object,
-            required: true
-        },
-        status: {
             type: Object,
             required: true
         },

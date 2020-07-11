@@ -100,6 +100,7 @@ export default {
             });
 
             const targ = event.target;
+            //not great
             if (targ && this.$parent.$el.contains(targ)) {
                 targ.blur();
             }

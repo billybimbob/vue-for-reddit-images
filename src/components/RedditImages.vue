@@ -97,10 +97,10 @@ export default {
 
     watch: {
         resetProps(newProps, oldProps) {
-            let sameVals = true;
-            for (let prop in newProps) { //not great
-                sameVals = sameVals && newProps[prop]===oldProps[prop];
-            }
+            const sameVals = Object.keys(newProps).reduce((isSame, prop) => (
+                isSame && newProps[prop]===oldProps[prop]
+            ), true);
+
             if (!sameVals) {
                 console.log('reseting')
                 this.redditPosts = [];
@@ -136,7 +136,8 @@ export default {
         },
 
         morePosts() {
-            this.$emit('update:limit', this.settings.limit+this.fetchmod);
+            //increase fetch exponentially?
+            this.$emit('update:limit', this.settings.limit*2);
         },
 
         checkedChange(changeCallback, {runId}) {

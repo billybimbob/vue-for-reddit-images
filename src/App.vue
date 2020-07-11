@@ -49,7 +49,8 @@ export default {
         limit: this.defaultLimit(),
         time: 'day'
       },
-      pins: []
+      pins: [],
+      autoLoad: false
     }
   },
   computed: {
@@ -66,7 +67,11 @@ export default {
   methods: {
     defaultLimit() { return 10; },
     addPin(sub) { this.pins.push(sub); },
-    setLimit(limit) { this.options.limit = limit; }
+    setLimit(limit) {
+      if (this.autoLoad) {
+        this.options.limit = limit;
+      }
+    }
   }
 }
 

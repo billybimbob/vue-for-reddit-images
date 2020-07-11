@@ -40,7 +40,8 @@ export default {
     props: {
         subreddit: String,
         order: String,
-        time: String
+        time: String,
+        autoLoad: Boolean
     },
     computed: {
         sortNames() {
