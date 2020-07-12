@@ -20,13 +20,14 @@ export default {
         }),
 
         observeImages() {
-            if (this.lazy.observer && this.getImages()) {
-                this.getImages()
-                    .map(image => image.$el) //assume el has a data-id attr
-                    .map(el => ({el, info: this.loadInfo[el.dataId]}))
+            const images = this.getImages();
+            if (this.lazy.observer && images) {
+                images.map(image => image.$el) //assume el has a dataId attr
+                    //.map(el => ({el, info: this.loadInfo[el.dataId]}))
                     //.map(el => ({ el, info: this.loadInfo[el.dataset.id] }))
-                    .filter(({info}) => !info.render)
-                    .forEach(({el}) => {
+                    //.filter(({ info }) => !info.render)
+                    .forEach((el) => {
+                        //too many observers? maybe limit amount
                         this.lazy.observer.observe(el);
                     });
             } else {
@@ -38,13 +39,20 @@ export default {
     },
 
     created() {
-        if ('IntersectionObserver' in window) { //add lazy loading
-            this.lazy.observer = new IntersectionObserver((entries, observer) => {
+        if ('IntersectionObserver' in window) { //add lazy loading if can
+            this.lazy.observer = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
-                    if (entry.intersectionRatio > 0) {
-                        const id = entry.target.dataId;
-                        this.loadInfo[id].render = true;
-                        observer.unobserve(entry.target);
+
+                    const info = this.getInfo(entry.target);
+                    if (entry.isIntersecting) {
+                        if (info.render) {
+                            info.show = true;
+                        } else {
+                            info.render = true;
+                        }
+                        //observer.unobserve(entry.target);
+                    } else if (info.show) {
+                        info.show = false;
                     }
                 });
             }, {threshold: 0.3});

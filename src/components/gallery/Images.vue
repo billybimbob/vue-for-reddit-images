@@ -32,6 +32,7 @@ export default {
     },
     methods: {
         getImages() { return this.$refs.list; },
+        getId: (image) => image.dataId,
 
         //forward events
         imageClick(idx, {target}) {

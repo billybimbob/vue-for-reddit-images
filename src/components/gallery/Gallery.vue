@@ -78,6 +78,10 @@ export default {
 
     methods: {
         getImages() { return this.$refs.images.getImages(); },
+        getInfo(image) {
+            const id = this.$refs.images.getId(image);
+            return this.loadInfo[id]; 
+        },
 
         newLoadInfo: () => ({
             style: {maxHeight: '100%', haxWidth: '100%'},

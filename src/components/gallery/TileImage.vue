@@ -1,17 +1,16 @@
 <template>
     <li :class="['small-tile', {'visible': post.show, 'active': active}]">
-        <transition name="fade">
-            <!--v-if used to start image load or not-->
-            <button v-if="post.render" v-show="post.render && post.show"
-                @click.stop="imageClick" >
+        <!--v-if used to start image load or not-->
+        <button v-if="post.render" @click.stop="imageClick" >
+            <!--must be img in button since input does not trigger load
+            when v-show is false-->
 
-                <!--must be img in button since input does not trigger load
-                when v-show is false-->
-
-                <img :src="post.img" :alt="post.title"
+            <transition name="fade">
+                <img v-show="post.show"
+                    :src="post.img" :alt="post.title"
                     :style="post.style" @load="imageLoad" />
-            </button>
-        </transition>
+            </transition>
+        </button>
     </li>
 </template>
 
