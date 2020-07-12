@@ -1,7 +1,7 @@
 <template>
     <ul v-if="posts.length!==0" class="image-grid">
         <!--want to pass to data-id, but auto camelcase-->
-        <li is="TileImage" ref="list"
+        <TileImage ref="list"
             v-for="(post, i) in posts"
             :key="post.id" 
             :dataId.prop="post.id"

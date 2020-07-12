@@ -10,12 +10,14 @@
       <Filters
         :subreddit.sync="subreddit"
         :time.sync="options.time"
-        :order.sync="order"/>
+        :order.sync="order"
+        :load="load.auto" @update:load="loadChange"/>
     </template>
 
     <template #main>
       <RedditImages :subreddit="subreddit" :order="order"
         :options="options" @update:limit="setLimit"/>
+
       <LoadMore :limit.sync="options.limit"/>
     </template>
 
@@ -50,7 +52,10 @@ export default {
         time: 'day'
       },
       pins: [],
-      autoLoad: false
+      load: {
+        auto: false,
+        request: 0
+      }
     }
   },
   computed: {
@@ -66,10 +71,22 @@ export default {
   },
   methods: {
     defaultLimit() { return 10; },
+
     addPin(sub) { this.pins.push(sub); },
+
     setLimit(limit) {
-      if (this.autoLoad) {
+      if (this.load.auto) {
         this.options.limit = limit;
+      } else {
+        this.load.request = limit;
+      }
+    },
+
+    loadChange(checked) {
+      this.load.auto = checked;
+      if (this.load.request) {
+        this.options.limit = this.load.request;
+        this.load.request = 0;
       }
     }
   }

@@ -5,10 +5,8 @@ export default {
     mixins: [Gallery],
     data() {
         return {
-            lazy: {
-                observer: null,
-                watchAmnt: 5
-            }
+            observer: null,
+            watchAmnt: 5
         }
     },
 
@@ -21,14 +19,11 @@ export default {
 
         observeImages() {
             const images = this.getImages();
-            if (this.lazy.observer && images) {
-                images.map(image => image.$el) //assume el has a dataId attr
-                    //.map(el => ({el, info: this.loadInfo[el.dataId]}))
-                    //.map(el => ({ el, info: this.loadInfo[el.dataset.id] }))
-                    //.filter(({ info }) => !info.render)
+            if (this.observer && images) {
+                images.map(image => image.$el)
                     .forEach((el) => {
                         //too many observers? maybe limit amount
-                        this.lazy.observer.observe(el);
+                        this.observer.observe(el);
                     });
             } else {
                 Object.values(this.loadInfo).forEach(info => {
@@ -40,22 +35,22 @@ export default {
 
     created() {
         if ('IntersectionObserver' in window) { //add lazy loading if can
-            this.lazy.observer = new IntersectionObserver((entries) => {
+            this.observer = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
-
+                    const intersect = entry.isIntersecting;
                     const info = this.getInfo(entry.target);
-                    if (entry.isIntersecting) {
-                        if (info.render) {
-                            info.show = true;
-                        } else {
-                            info.render = true;
-                        }
-                        //observer.unobserve(entry.target);
+
+                    if (!info) { //posts all change, maybe add to beforeUpdate?
+                        return;
+                    } else if (intersect && !info.render) {
+                        info.render = true;
+                    } else if (intersect && info.render) {
+                        info.show = true;
                     } else if (info.show) {
                         info.show = false;
                     }
                 });
-            }, {threshold: 0.3});
+            }, {threshold: 0.25});
         }
     },
     mounted() {
@@ -67,8 +62,8 @@ export default {
     },
 
     beforeDestroy() {
-        if (this.lazy.observer) {
-            this.lazy.observer.disconnect();
+        if (this.observer) {
+            this.observer.disconnect();
         }
     }
 }

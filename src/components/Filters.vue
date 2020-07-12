@@ -18,6 +18,9 @@
             <input v-model="newsubname" placeholder="Enter subreddit name" class="searchTerm">
             <button @click="setSubName" form="orderBy" type="submit" class="searchButton">Go</button>
         </form>
+
+        <input type="checkbox" id="autoLoad" :value="load" @change="autoChange"/>
+        <label for="autoLoad">Infinite Scroll</label>
     </div>
 </template>
 
@@ -41,7 +44,7 @@ export default {
         subreddit: String,
         order: String,
         time: String,
-        autoLoad: Boolean
+        load: Boolean
     },
     computed: {
         sortNames() {
@@ -76,6 +79,9 @@ export default {
             //console.log("old name: " + this.subreddit, " new name: " + this.newsubname);
             console.log(this.newsubname);
             this.$emit('update:subreddit', this.newsubname);
+        },
+        autoChange() {
+            this.$emit('update:load', !this.load);
         }
     }
 }

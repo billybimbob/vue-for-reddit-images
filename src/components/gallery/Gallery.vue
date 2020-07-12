@@ -85,7 +85,7 @@ export default {
 
         newLoadInfo: () => ({
             style: {maxHeight: '100%', haxWidth: '100%'},
-            render: true,
+            render: true, //by default always immediately load
             show: false
         }),
 
@@ -119,6 +119,7 @@ export default {
             const boundDim = img.width > img.height
                 ? 'maxHeight' : 'maxWidth';
 
+            // image only shown after being loaded and styled
             info.style = {[boundDim]: '100%'};
             info.show = true;
             this.loaded += 1;
