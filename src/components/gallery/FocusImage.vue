@@ -52,6 +52,10 @@ export default {
         posts: {
             type: Array,
             default: () => []
+        },
+        slideshow: {
+            type: Boolean,
+            default: false
         }
     },
     computed: {
@@ -69,14 +73,11 @@ export default {
             }
         },
         focused() {
-            if (this.focused!==null) {
-                if (this.timer!==null) {
-                    clearInterval(this.timer);
-                }
-                this.timer = setInterval(() => this.nextImage(), 10000);
-
-            } else if (this.timer!==null) {
+            if (this.timer!==null) {
                 clearInterval(this.timer);
+            }
+            if (this.slideshow && this.focused!==null) {
+                this.timer = setInterval(this.nextImage, 10000);
             }
         }
     },
@@ -229,5 +230,13 @@ export default {
 .appear-enter, .appear-leave-to {
     opacity: 0;
     transform: translate(-50%, -50%);
+}
+
+.fade-enter-active, .fade-leave-active {
+    transition: opacity .5s;
+}
+
+.fade-enter, .fade-leave-to {
+    opacity: 0;
 }
 </style>

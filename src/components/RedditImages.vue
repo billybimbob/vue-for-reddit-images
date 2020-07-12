@@ -3,7 +3,7 @@
         limit redditPosts to only render
         what's on screen
     -->
-    <LazyGallery :posts="posts" @moreposts="morePosts"/>
+    <LazyGallery :posts="posts" :slideshow="slideshow" @moreposts="morePosts"/>
 </template>
 
 
@@ -66,12 +66,18 @@ export default {
                 ? this.options.fetchmod
                 : this.defaultOptions().fetchmod;
         },
+        slideshow() {
+            return 'slideshow' in this.options
+                ? this.options.slideshow
+                : this.defaultOptions.slideshow
+        },
         settings() { //normalized options props
             const normal = {
                 ...this.defaultOptions(),
                 ...this.options
             };
             delete normal.fetchmod;
+            delete normal.slideshow;
             return normal;
         },
         // to watch multiple prop vals
@@ -120,7 +126,7 @@ export default {
 
     methods: {
         defaultOptions() {
-            return {limit: 10, time: 'any', fetchmod: 10}
+            return {limit: 10, time: 'any', fetchmod: 10, slideshow: false}
         },
 
         getRequester() {

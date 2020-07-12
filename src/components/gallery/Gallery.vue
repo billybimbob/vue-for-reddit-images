@@ -9,7 +9,8 @@
             @click="imageClick" @load="imageLoad"
         />
 
-        <FocusImage :lookIdx.sync="lookIdx" :posts="posts"/>
+        <FocusImage :slideshow="slideshow" :posts="posts"
+            :lookIdx.sync="lookIdx"/>
     </div>
 </template>
 
@@ -48,6 +49,10 @@ export default {
                     ), true)
                 ))
             }
+        },
+        slideshow: {
+            type: Boolean,
+            default: false
         }
     },
     computed: {
@@ -136,13 +141,5 @@ export default {
 <style>
 .viewer {
     width: 100%;
-}
-
-.fade-enter-active, .fade-leave-active {
-    transition: opacity .5s;
-}
-
-.fade-enter, .fade-leave-to {
-    opacity: 0;
 }
 </style>

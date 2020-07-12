@@ -19,8 +19,11 @@
             <button @click="setSubName" form="orderBy" type="submit" class="searchButton">Go</button>
         </form>
 
-        <input type="checkbox" id="autoLoad" :value="load" @change="autoChange"/>
-        <label for="autoLoad">Infinite Scroll</label>
+        <input type="checkbox" id="autoload" :value="load" @change="autoChange"/>
+        <label for="autoload">Infinite Scroll</label>
+
+        <input type="checkbox" id="slideshow" :checked="slideshow" @change="showChange"/>
+        <label for="slideshow">Slideshow</label>
     </div>
 </template>
 
@@ -44,7 +47,8 @@ export default {
         subreddit: String,
         order: String,
         time: String,
-        load: Boolean
+        load: Boolean,
+        slideshow: Boolean
     },
     computed: {
         sortNames() {
@@ -82,6 +86,9 @@ export default {
         },
         autoChange() {
             this.$emit('update:load', !this.load);
+        },
+        showChange() {
+            this.$emit('update:slideshow', !this.slideshow);
         }
     }
 }

@@ -34,7 +34,7 @@ export default {
         getImages() { return this.$refs.list; },
         getId: (image) => image.dataId,
 
-        //forward events
+        //repackage events
         imageClick(idx, {target}) {
             this.$emit('click', {idx, target});
         },

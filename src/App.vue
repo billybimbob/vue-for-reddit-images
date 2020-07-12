@@ -11,7 +11,8 @@
         :subreddit.sync="subreddit"
         :time.sync="options.time"
         :order.sync="order"
-        :load="load.auto" @update:load="loadChange"/>
+        :load="load.auto" @update:load="loadChange"
+        :slideshow.sync="options.slideshow" />
     </template>
 
     <template #main>
@@ -49,7 +50,8 @@ export default {
       order: "hot",
       options: {
         limit: this.defaultLimit(),
-        time: 'day'
+        time: 'day',
+        slideshow: false
       },
       pins: [],
       load: {

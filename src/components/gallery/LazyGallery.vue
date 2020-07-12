@@ -5,8 +5,7 @@ export default {
     mixins: [Gallery],
     data() {
         return {
-            observer: null,
-            watchAmnt: 5
+            observer: null
         }
     },
 
@@ -14,15 +13,17 @@ export default {
         newLoadInfo: () => ({
             style: {maxHeight: '100%', haxWidth: '100%'},
             render: false,
-            show: false
+            show: false,
+            //loaded: false //used only internally
         }),
 
         observeImages() {
             const images = this.getImages();
             if (this.observer && images) {
                 images.map(image => image.$el)
-                    .forEach((el) => {
-                        //too many observers? maybe limit amount
+                    .map(el => ({ el, info: this.getInfo(el) }))
+                    .filter(({ info }) => !info.render)
+                    .forEach(({ el }) => {
                         this.observer.observe(el);
                     });
             } else {
@@ -35,20 +36,29 @@ export default {
 
     created() {
         if ('IntersectionObserver' in window) { //add lazy loading if can
-            this.observer = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
+            this.observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
                     const intersect = entry.isIntersecting;
                     const info = this.getInfo(entry.target);
 
-                    if (!info) { //posts all change, maybe add to beforeUpdate?
+                    if (!info) { //posts all change
+                        observer.unobserve(entry.target);
                         return;
-                    } else if (intersect && !info.render) {
+                    } else if (intersect) {
                         info.render = true;
-                    } else if (intersect && info.render) {
-                        info.show = true;
-                    } else if (info.show) {
-                        info.show = false;
+                        observer.unobserve(entry.target);
                     }
+                    /*else if (info.show) {
+                        info.loaded = true; //never set back to false
+                    }
+                    
+                    if (intersect && !info.render) {
+                        info.render = true;
+                    } else if (intersect && info.loaded && !info.show) {
+                        info.show = true;
+                    } else if (!intersect && info.loaded) {
+                        info.show = false;
+                    }*/
                 });
             }, {threshold: 0.25});
         }
