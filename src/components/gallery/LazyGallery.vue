@@ -20,9 +20,11 @@ export default {
         observeImages() {
             const images = this.getImages();
             if (this.observer && images) {
-                images.map(image => image.$el)
-                    .map(el => ({ el, info: this.getInfo(el) }))
-                    .filter(({ info }) => !info.render)
+                images
+                    .map(image => image.$el)
+                    .map(el => (
+                        { el, info: this.getInfo(el) }))
+                    .filter (({ info }) => !info.render)
                     .forEach(({ el }) => {
                         this.observer.observe(el);
                     });
@@ -43,7 +45,7 @@ export default {
 
                     if (!info) { //posts all change
                         observer.unobserve(entry.target);
-                        return;
+                        //return;
                     } else if (intersect) {
                         info.render = true;
                         observer.unobserve(entry.target);

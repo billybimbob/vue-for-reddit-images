@@ -5,7 +5,6 @@
 <script>
 export default {
     props: {
-        limit: Number,
         morePosts: {
             type: Number,
             default: 10
@@ -13,7 +12,7 @@ export default {
     },
     methods: {
         loadMore() {
-            this.$emit('update:limit', this.limit+this.morePosts);
+            this.$emit('moreposts', this.morePosts);
         }
     }
 }

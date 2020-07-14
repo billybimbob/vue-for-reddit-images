@@ -11,15 +11,13 @@
         :subreddit.sync="subreddit"
         :time.sync="options.time"
         :order.sync="order"
-        :load="load.auto" @update:load="loadChange"
+        :autoload.sync="options.autoload"
         :slideshow.sync="options.slideshow" />
     </template>
 
     <template #main>
-      <RedditImages :subreddit="subreddit" :order="order"
-        :options="options" @update:limit="setLimit"/>
-
-      <LoadMore :limit.sync="options.limit"/>
+      <RedditImages :subreddit="subreddit" :order="order" :options="options"
+        :limit.sync="options.limit"/>
     </template>
 
   </BasePage>
@@ -31,7 +29,6 @@ import SideBar from './components/SideBar'
 import SubTitle from './components/SubTitle'
 import Filters from './components/Filters'
 import RedditImages from './components/RedditImages'
-import LoadMore from './components/LoadMore'
 
 export default {
   name: 'App',
@@ -40,8 +37,7 @@ export default {
     SideBar,
     SubTitle,
     Filters,
-    RedditImages,
-    LoadMore
+    RedditImages
   },
 
   data() {
@@ -51,13 +47,10 @@ export default {
       options: {
         limit: this.defaultLimit(),
         time: 'day',
-        slideshow: false
+        slideshow: false,
+        autoload: false
       },
-      pins: [],
-      load: {
-        auto: false,
-        request: 0
-      }
+      pins: []
     }
   },
   computed: {
@@ -72,16 +65,12 @@ export default {
     }
   },
   methods: {
-    defaultLimit() { return 10; },
+    defaultLimit: () => 10,
 
     addPin(sub) { this.pins.push(sub); },
 
     setLimit(limit) {
-      if (this.load.auto) {
-        this.options.limit = limit;
-      } else {
-        this.load.request = limit;
-      }
+      this.options.limit = limit
     },
 
     loadChange(checked) {

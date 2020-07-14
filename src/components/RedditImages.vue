@@ -3,7 +3,9 @@
         limit redditPosts to only render
         what's on screen
     -->
-    <LazyGallery :posts="posts" :slideshow="slideshow" @moreposts="morePosts"/>
+    <LazyGallery :posts="posts" :isLoading="isLoading"
+        :slideshow="slideshow" :autoload="autoload"
+        @moreposts="morePosts" />
 </template>
 
 
@@ -37,13 +39,14 @@ export default {
             requester: null,
             stream: {count: 0, after: null},
             cache: [],
-            redditPosts: []
+            redditPosts: [],
+            isLoading: false
         }
     },
     props: {
         subreddit: {
             type: String,
-            default: 'pics'
+            required: true
         },
         order: {
             type: String,
@@ -61,16 +64,10 @@ export default {
         }
     },
     computed: {
-        fetchmod() {
-            return 'fetchmod' in this.options
-                ? this.options.fetchmod
-                : this.defaultOptions().fetchmod;
-        },
-        slideshow() {
-            return 'slideshow' in this.options
-                ? this.options.slideshow
-                : this.defaultOptions.slideshow
-        },
+        fetchmod () { return this.getOptionsAttr('fetchmod'); },
+        slideshow() { return this.getOptionsAttr('slideshow'); },
+        autoload () { return this.getOptionsAttr('autoload'); },
+
         settings() { //normalized options props
             const normal = {
                 ...this.defaultOptions(),
@@ -78,6 +75,7 @@ export default {
             };
             delete normal.fetchmod;
             delete normal.slideshow;
+            delete normal.autoload;
             return normal;
         },
         // to watch multiple prop vals
@@ -125,8 +123,18 @@ export default {
     },
 
     methods: {
-        defaultOptions() {
-            return {limit: 10, time: 'any', fetchmod: 10, slideshow: false}
+        defaultOptions: () => ({ //immutable
+            limit: 10,
+            time: 'any',
+            fetchmod: 10,
+            slideshow: false,
+            autoload: false
+        }),
+        
+        getOptionsAttr(attr) {
+            return attr in this.options
+                ? this.options[attr]
+                : this.defaultOptions()[attr];
         },
 
         getRequester() {
@@ -138,17 +146,26 @@ export default {
                 .decrypt(secrets.password, secrets.clientId)
                 .toString(CryptoJS.enc.Utf8);
 
-            return new snoowrap({...secrets, username, password});
+            const r = new snoowrap({...secrets, username, password});
+            r.config({continueAfterRatelimitError: true, }); //debug: true});
+            
+            return r;
         },
 
-        morePosts() {
+        morePosts(moreAmnt) {
             //increase fetch exponentially?
-            this.$emit('update:limit', this.settings.limit*2);
+            if (moreAmnt) {
+                this.$emit('update:limit', this.settings.limit + moreAmnt);
+            } else {
+                this.$emit('update:limit', this.settings.limit + this.fetchmod*2);
+            }
         },
 
         checkedChange(changeCallback, {runId}) {
             if (runId === this.runCount)
                 changeCallback();
+            else
+                throw new Error(`run ${runId} was not able to run callback`)
         },
 
         async fetchImages(fetchPosts, {target=1}) {
@@ -160,7 +177,6 @@ export default {
                 adding.map(add => add.id)
                     .forEach(id => uniques.add(id));
             }
-
             const filterImages = (redditPosts) => (
                 redditPosts.filter(post => post.author.name!=='[deleted]'
                     && !uniques.has(post.id)
@@ -168,9 +184,9 @@ export default {
             )
 
             addImages(this.cache);
-
             let tries = 0;
             const MAX_TRIES = 5;
+
             while(images.length < target && tries++ < MAX_TRIES) {
                 const fetched = await fetchPosts();
                 addImages(filterImages(fetched));
@@ -178,6 +194,7 @@ export default {
 
             return images;
         },
+
 
         async setPosts() { //modifies data values
             const runId = this.runCount;
@@ -234,11 +251,13 @@ export default {
     beforeCreate() {
         this.updatePosts = throttle(() => { //prevent excess calls
             this.runCount++;
+            this.isLoading = true;
             this.setPosts()
-                //.then(() => console.log('finished updating'))
+                .then(() => {
+                    this.isLoading = false;
+                })
                 .catch(error => {
-                    console.log('issue fetching data:')
-                    console.log(error)
+                    console.log(`${error.name}: ${error.message}`)
                 });
         }, 0, {leading: false});
     },

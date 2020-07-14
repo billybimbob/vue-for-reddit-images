@@ -11,6 +11,9 @@
 
         <FocusImage :slideshow="slideshow" :posts="posts"
             :lookIdx.sync="lookIdx"/>
+
+        <LoadingIcon v-if="isLoading"/>
+        <LoadMore v-else v-on="$listeners"/>
     </div>
 </template>
 
@@ -18,21 +21,22 @@
 <script>
 import Images from './Images';
 import FocusImage from './FocusImage';
+import LoadingIcon from './LoadingIcon';
+import LoadMore from './LoadMore';
 
 export default {
     components: {
         Images,
-        FocusImage
+        FocusImage,
+        LoadingIcon,
+        LoadMore
     },
     data() {
         return {
             loadInfo: {},
             loaded: 0,
             lookIdx: -1,
-            lazy: {
-                observer: null,
-                watchAmnt: 5
-            }
+            loadQueued: false
         }
     },
     props: {
@@ -51,6 +55,14 @@ export default {
             }
         },
         slideshow: {
+            type: Boolean,
+            default: false
+        },
+        autoload: {
+            type: Boolean,
+            default: false
+        },
+        isLoading: {
             type: Boolean,
             default: false
         }
@@ -76,7 +88,17 @@ export default {
             // can emit to auto load more posts
             if (this.loaded === this.posts.length) {
                 console.log('loaded all')
-                this.$emit('moreposts');
+                if (this.autoload) {
+                    this.morePosts();
+                } else {
+                    this.loadQueued = true;
+                }
+            }
+        },
+        autoload() {
+            if (this.autoload && this.loadQueued) {
+               this.morePosts(); 
+               this.loadQueued = false;
             }
         }
     },
@@ -87,6 +109,7 @@ export default {
             const id = this.$refs.images.getId(image);
             return this.loadInfo[id]; 
         },
+        morePosts() { this.$emit('moreposts') },
 
         newLoadInfo: () => ({
             style: {maxHeight: '100%', haxWidth: '100%'},
