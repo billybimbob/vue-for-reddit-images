@@ -1,7 +1,7 @@
 <template>
     <li :class="['small-tile', {'visible': post.show, 'active': active}]">
         <!--v-if used to start image load or not-->
-        <button v-if="post.render" @click.stop="imageClick" >
+        <button v-if="post.render" @click="imageClick" >
             <!--must be img in button since input does not trigger load
             when v-show is false-->
 

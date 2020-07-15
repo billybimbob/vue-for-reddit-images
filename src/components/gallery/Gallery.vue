@@ -36,7 +36,8 @@ export default {
             loadInfo: {},
             loaded: 0,
             lookIdx: -1,
-            loadQueued: false
+            loadQueued: false,
+            atBottom: false
         }
     },
     props: {
@@ -73,6 +74,10 @@ export default {
                 ...post,
                 ...this.loadInfo[post.id]
             }));
+        },
+        autoProps() {
+            const {loaded, atBottom} = this;
+            return {loaded, atBottom};
         }
     },
 
@@ -84,9 +89,11 @@ export default {
             },
             immediate: true
         },
-        loaded() {
+        autoProps() {
             // can emit to auto load more posts
-            if (this.loaded === this.posts.length) {
+            if (!this.isLoading && this.atBottom
+              && this.loaded===this.posts.length) {
+
                 console.log('loaded all')
                 if (this.autoload) {
                     this.morePosts();
@@ -141,6 +148,7 @@ export default {
             this.loaded = this.posts.length - newImages;
         },
 
+
         imageLoad({idx, target: img}) {
             const id = this.posts[idx].id;
             const info = this.loadInfo[id]
@@ -152,10 +160,25 @@ export default {
             info.show = true;
             this.loaded += 1;
         },
-
         imageClick({idx: imgIdx}) {
             this.lookIdx = imgIdx;
+        },
+
+        scrollBottom() {
+            if ((window.innerHeight+window.scrollY) >= document.body.scrollHeight*0.95) {
+                console.log('at bottom')
+                this.atBottom = true;
+            } else {
+                this.atBottom = false;
+            }
         }
+    },
+
+    mounted() {
+        window.addEventListener('scroll', this.scrollBottom);
+    },
+    beforeDestroy() {
+        window.removeEventListener('scroll', this.scrollBottom);
     }
 }
 </script>

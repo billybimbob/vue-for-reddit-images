@@ -28,7 +28,7 @@ export default {
                     .forEach(({ el }) => {
                         this.observer.observe(el);
                     });
-            } else {
+            } else if (!this.observer) {
                 Object.values(this.loadInfo).forEach(info => {
                     info.render = true;
                 });
@@ -63,6 +63,8 @@ export default {
                     }*/
                 });
             }, {threshold: 0.25});
+        } else {
+            console.log('cannot use intersection observer')
         }
     },
     mounted() {

@@ -7,7 +7,8 @@
             :dataId.prop="post.id"
             :post="post"
             :active="i===lookIdx"
-            @click="imageClick(i, $event)" @load="imageLoad(i, $event)"
+            @click.stop="imageClick(i, $event)"
+            @load.stop="imageLoad(i, $event)"
         />
     </ul>
 </template>

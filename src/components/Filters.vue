@@ -85,7 +85,7 @@ export default {
             this.$emit('update:subreddit', this.newsubname);
         },
         autoChange() {
-            this.$emit('update:autoload', !this.load);
+            this.$emit('update:autoload', !this.autoload);
         },
         showChange() {
             this.$emit('update:slideshow', !this.slideshow);
