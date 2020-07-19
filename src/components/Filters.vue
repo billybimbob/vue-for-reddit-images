@@ -17,7 +17,7 @@
         </div>
 
         <form name="orderBy" @submit.prevent="setSubName">
-            <input v-model="newsubname" placeholder="Enter subreddit name" class="searchTerm">
+            <input v-model="newsubname" @focus="clearSubname" placeholder="Enter subreddit name" class="searchTerm">
             <button @click="setSubName" form="orderBy" type="submit" class="searchButton">Go</button>
         </form>
 
@@ -37,6 +37,7 @@ export default {
     data() {
         return {
             newsubname: "",
+            entered: false,
             sortBy: [
                 {name: 'hot', timed: false},
                 {name: 'top', timed: true},
@@ -76,6 +77,12 @@ export default {
     },
 
     methods: {
+        clearSubname() {
+            if (this.entered) {
+                this.newsubname = "";
+                this.entered = false;
+            }
+        },
         orderChange(event) {
             //console.log(event.target.value)
             this.$emit('update:order', event.target.value);
@@ -87,6 +94,7 @@ export default {
             //console.log("old name: " + this.subreddit, " new name: " + this.newsubname);
             console.log(this.newsubname);
             this.$emit('update:subreddit', this.newsubname);
+            this.entered = true;
         },
         autoChange() {
             this.$emit('update:autoload', !this.autoload);
@@ -109,13 +117,21 @@ export default {
 }
 
 .searchTerm {
-    border: 3px solid #6f7887;
+    border: none;
+    border-bottom: 2px solid #6f7887;
     padding: 15px;
+    padding-left: 4px;
     height: 8px;
-    border-right: none;
     outline: none;
-    color: #9DBFAF;
+    color: #6f7887;
+    background-color: transparent;
     font-size: 18px;
+    transition: all 0.25s ease-in;
+}
+
+.searchTerm:focus {
+    transform: scale(1.02);
+    border-color: black;
 }
 
 .searchButton {
@@ -134,6 +150,11 @@ export default {
     border: 0px solid #6f7887;
     width: auto;
     height: 44px;
+}
+
+.checkboxes {
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 button {

@@ -1,6 +1,7 @@
 <template>
     <div class="viewer">
-        <h2 v-if="posts.length == 0">Loading images</h2>
+        <h2 v-if="isLoading">Loading images</h2>
+        <h2 v-else-if="posts.length===0">No images were found</h2>
         <h2 v-else>Showing {{ posts.length }} images</h2>
 
         <!--tight coupling between Images and Gallery-->
@@ -13,7 +14,7 @@
             :lookIdx.sync="lookIdx"/>
 
         <LoadingIcon v-if="isLoading"/>
-        <LoadMore v-else v-on="$listeners"/>
+        <LoadMore v-else-if="posts.length!==0" v-on="$listeners"/>
     </div>
 </template>
 

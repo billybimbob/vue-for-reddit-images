@@ -188,9 +188,9 @@ export default {
             const MAX_TRIES = 5;
 
             while(images.length < target && tries++ < MAX_TRIES) {
-                const fetched = await postGen.next();
+                const {value: redditPosts} = await postGen.next();
                 addImages(
-                    filterImages(fetched.value)
+                    filterImages(redditPosts)
                 );
             }
 
@@ -204,6 +204,7 @@ export default {
 
             if (target === 0) {
                 return;
+                
             } else if (target < 0) {
                 this.checkedChange(() => {
                     this.cache.unshift( ...this.redditPosts.splice(target) );
@@ -265,6 +266,7 @@ export default {
                 })
                 .catch(error => {
                     console.log(`${error.name}: ${error.message}`)
+                    this.isLoading = false;
                 });
         }, 0, {leading: false});
     },
