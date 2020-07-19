@@ -57,6 +57,6 @@ export default {
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    margin-left: 7%
+    margin-left: 1%
 }
 </style>

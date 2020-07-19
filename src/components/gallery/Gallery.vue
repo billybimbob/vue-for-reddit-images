@@ -36,8 +36,7 @@ export default {
             loadInfo: {},
             loaded: 0,
             lookIdx: -1,
-            loadQueued: false,
-            atBottom: false
+            atBottom: true //true in case no scroll
         }
     },
     props: {
@@ -76,8 +75,8 @@ export default {
             }));
         },
         autoProps() {
-            const {loaded, atBottom} = this;
-            return {loaded, atBottom};
+            const {loaded, autoload, atBottom} = this;
+            return {loaded, autoload, atBottom};
         }
     },
 
@@ -91,31 +90,25 @@ export default {
         },
         autoProps() {
             // can emit to auto load more posts
-            if (!this.isLoading && this.atBottom
+            if (!this.isLoading
+              && this.autoload
+              && this.atBottom
               && this.loaded===this.posts.length) {
 
                 console.log('loaded all')
-                if (this.autoload) {
-                    this.morePosts();
-                } else {
-                    this.loadQueued = true;
-                }
-            }
-        },
-        autoload() {
-            if (this.autoload && this.loadQueued) {
-               this.morePosts(); 
-               this.loadQueued = false;
+                this.morePosts();
             }
         }
     },
 
     methods: {
         getImages() { return this.$refs.images.getImages(); },
+
         getInfo(image) {
             const id = this.$refs.images.getId(image);
             return this.loadInfo[id]; 
         },
+
         morePosts() { this.$emit('moreposts') },
 
         newLoadInfo: () => ({
@@ -127,11 +120,12 @@ export default {
         updateLoads() {
             //removes images no longer present
             const postIds = new Set(this.posts.map(post => post.id));
-            this.loadInfo = Object.entries(this.loadInfo).reduce((loads, [id, info]) => {
-                return !postIds.has(id)
-                    ? loads
-                    : {...loads, [id]: info};
-            }, {});
+            this.loadInfo = Object.entries(this.loadInfo)
+                .reduce((loads, [id, info]) => {
+                    return !postIds.has(id)
+                        ? loads
+                        : {...loads, [id]: info};
+                }, {});
             
             //adds new images
             let newImages = 0;

@@ -1,6 +1,6 @@
 <template>
 
-<div class="sidebar-fixed">
+<div class="pin-sidebar">
   <a href="#">Pinned subreddits</a>
   <li v-for="sub in pins" :key="sub" class="listText" @click="toSub(sub)">
     {{ "r/" + sub }}
@@ -31,18 +31,14 @@ export default {
 
 
 <style scoped>
-.sidebar-fixed {
-  height: 100vh;
-  width: inherit;
-  max-width: inherit;
-  position: fixed;
-  z-index: 1;
-  background-color: #424447;
-  overflow-x: hidden;
+.pin-sidebar {
+  height: 100%;
   padding-top: 20px;
+  background-color: #424447;
+  box-shadow: 0 0 11px rgba(0, 0, 0, 0.3);
 }
 
-.sidebar-fixed a {
+.pin-sidebar a {
   padding: 6px 8px 6px 16px;
   text-decoration: none;
   font-size: 25px;

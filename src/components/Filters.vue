@@ -1,29 +1,33 @@
 <template>
     <div class="filters">
-        <select :value="order" @change="orderChange" class="sortSelect">
-            <option v-for="(option, i) in sortBy"
-                :value="option.name" :key="option.name" >
-                {{ sortNames[i] }}
-            </option>
-        </select>
+        <div class="selects">
+            <select :value="order" @change="orderChange" class="sortSelect">
+                <option v-for="(option, i) in sortBy"
+                    :value="option.name" :key="option.name" >
+                    {{ sortNames[i] }}
+                </option>
+            </select>
 
-        <select v-if="timed" :value="time" @change="timeChange" class="sortSelect">
-            <option v-for="(interval, i) in times"
-                :value="interval" :key="interval" >
-                {{ timeNames[i] }}
-            </option>
-        </select>
+            <select v-if="timed" :value="time" @change="timeChange" class="sortSelect">
+                <option v-for="(interval, i) in times"
+                    :value="interval" :key="interval" >
+                    {{ timeNames[i] }}
+                </option>
+            </select>
+        </div>
 
         <form name="orderBy" @submit.prevent="setSubName">
             <input v-model="newsubname" placeholder="Enter subreddit name" class="searchTerm">
             <button @click="setSubName" form="orderBy" type="submit" class="searchButton">Go</button>
         </form>
 
-        <input type="checkbox" id="autoload" :value="autoload" @change="autoChange"/>
-        <label for="autoload">Infinite Scroll</label>
+        <div class="checkboxes">
+            <input type="checkbox" id="autoload" :value="autoload" @change="autoChange"/>
+            <label for="autoload">Infinite Scroll</label>
 
-        <input type="checkbox" id="slideshow" :checked="slideshow" @change="showChange"/>
-        <label for="slideshow">Slideshow</label>
+            <input type="checkbox" id="slideshow" :checked="slideshow" @change="showChange"/>
+            <label for="slideshow">Slideshow</label>
+        </div>
     </div>
 </template>
 
@@ -97,10 +101,11 @@ export default {
 
 <style scoped>
 .filters {
+    width: 99%;
     font-size: 20px;
-    font-family: sans-serif;
-    padding: 20px 30px 20px 0px;
+    padding: 20px 0px;
     display: inline-flex;
+    justify-content: space-between;
 }
 
 .searchTerm {
@@ -111,7 +116,6 @@ export default {
     outline: none;
     color: #9DBFAF;
     font-size: 18px;
-    font-family: Arial;
 }
 
 .searchButton {
@@ -123,8 +127,8 @@ export default {
 }
 
 .sortSelect {
-    font-family: Arial;
     background: #6f7887;
+    color: white;
     text-align: center;
     bottom: 2px;
     border: 0px solid #6f7887;

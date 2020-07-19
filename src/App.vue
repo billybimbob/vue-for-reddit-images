@@ -1,12 +1,6 @@
 <template>
   <BasePage>
-
-    <template #sidebar>
-      <SideBar :subreddit.sync="subreddit" :pins="pins" />
-    </template>
-
-    <template #heading>
-      <SubTitle :subreddit="subreddit" :pins="pins" @pin="addPin"/>
+    <template #header>
       <Filters
         :subreddit.sync="subreddit"
         :time.sync="options.time"
@@ -15,7 +9,12 @@
         :slideshow.sync="options.slideshow" />
     </template>
 
+    <template #sidebar>
+      <SideBar :subreddit.sync="subreddit" :pins="pins" />
+    </template>
+
     <template #main>
+      <SubTitle :subreddit="subreddit" :pins="pins" @pin="addPin"/>
       <RedditImages :subreddit="subreddit" :order="order" :options="options"
         :limit.sync="options.limit"/>
     </template>

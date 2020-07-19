@@ -1,49 +1,75 @@
 <template>
     <div class="page">
-        <div class="sidebar">
-            <slot name="sidebar"></slot>
-        </div>
-        
-        <div class="content">
-            <slot name="heading"></slot>
-            <div class="main">
-                <slot name="main"></slot>
-            </div>
-        </div>
+      <header>
+        <slot name="header"></slot>
+      </header>
+      
+      <div :class="['sidebar']">
+          <slot name="sidebar"></slot>
+      </div>
+
+      <main>
+          <slot name="main"></slot>
+      </main>
   </div>
 </template>
 
 
 <script>
-
 export default {
-  name: "BasePage"
+  name: "BasePage",
+
+  data() {
+    return {
+      scrolled: false
+    }
+  },
+  methods: {
+    scrollCheck() {
+      const distanceY = window.pageYOffset || document.documentElement.scrollTop;
+      const shrinkOn = window.innerHeight * 0.02; 
+      this.scrolled = distanceY > shrinkOn;
+    }
+  },
+  mounted() {
+    window.addEventListener('scroll', this.scrollCheck);
+  },
+  beforeDestroy() {
+    window.removeEventlistener('scroll', this.scrollcheck);
+  }
 };
 </script>
 
 
 <style>
-.page {
-  display: flex;
-  flex-direction: row;
+header {
+  z-index: 2;
+  margin-left: 180px;
+  width: calc(100% - 180px);
+  box-shadow: 0 0 11px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar {
-  width: 20vw;
-  max-width: 180px;
+  top: 0;
+  left: 0;
+  width: 180px;
+  position: fixed;
+  z-index: 1;
+  height: 100%;
+  transition: transform 0.2s;
 }
 
-.content {
-  padding: 0;
-  padding-right: 15px;
-  margin-bottom: 30px;
-  width: 100%;
+.sidebar.scrolled {
+  transform: translateY(-10%);
 }
 
-.main {
+main {
+  margin-left: 180px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 0 15px 30px 15px;
+  height: 100%;
 }
 </style>

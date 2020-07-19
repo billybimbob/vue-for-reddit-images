@@ -168,8 +168,8 @@ export default {
                 throw new Error(`run ${runId} was not able to run callback`)
         },
 
-        async fetchImages(fetchPosts, {target=1}) {
-            const images = []; //copy cache
+        async fetchImages(postGen, {target=1}) {
+            const images = [];
             const uniques = new Set();
 
             const addImages = (adding) => {
@@ -183,13 +183,15 @@ export default {
                     && imageExts.has(getExtension(post.url)) )
             )
 
-            addImages(this.cache);
+            addImages(this.cache); //copy cache
             let tries = 0;
             const MAX_TRIES = 5;
 
             while(images.length < target && tries++ < MAX_TRIES) {
-                const fetched = await fetchPosts();
-                addImages(filterImages(fetched));
+                const fetched = await postGen.next();
+                addImages(
+                    filterImages(fetched.value)
+                );
             }
 
             return images;
@@ -214,24 +216,29 @@ export default {
                 .concat(this.order.charAt(0).toUpperCase())
                 .concat(this.order.slice(1).toLowerCase());
 
+            const settings = this.settings;
             const limit = target + this.fetchmod;
             let { count, after } = this.stream;
 
-            // potential issue when api posts order changes
-            const fetchPosts = async () => {
+            /**
+             * potential issue when api posts order changes;
+             * generator has no end
+             */
+            const postGen = (async function*() {
                 console.log('requesting')
+                
                 const fetched = await subRef[orderFunct]({
-                    ...this.settings,
+                    ...settings,
                     ...(count && {count, after}),
                     limit
                 })
                 count += limit;
                 after = fetched._query.after;
 
-                return fetched;
-            }
+                yield fetched;
+            })();
 
-            const images = await this.fetchImages(fetchPosts, {target});
+            const images = await this.fetchImages(postGen, {target});
 
             //sync point, changes data values, race condition?
             this.checkedChange(() => {

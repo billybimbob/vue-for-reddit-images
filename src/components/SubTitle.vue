@@ -44,7 +44,7 @@ export default {
 
 <style>
 .subtitle {
-  text-align: right;
+  text-align: left;
 }
 
 .SubNameTitle {
