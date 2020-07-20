@@ -177,21 +177,22 @@ export default {
                 adding.map(add => add.id)
                     .forEach(id => uniques.add(id));
             }
+
+            addImages(this.cache); //copy cache
+            if (images.length > target) {
+                return images;
+            }
+            
             const filterImages = (redditPosts) => (
                 redditPosts.filter(post => post.author.name!=='[deleted]'
                     && !uniques.has(post.id)
                     && imageExts.has(getExtension(post.url)) )
             )
 
-            addImages(this.cache); //copy cache
-            let tries = 0;
-            const MAX_TRIES = 5;
-
-            while(images.length < target && tries++ < MAX_TRIES) {
-                const {value: redditPosts} = await postGen.next();
-                addImages(
-                    filterImages(redditPosts)
-                );
+            for await (const redditPosts of postGen) {
+                addImages( filterImages(redditPosts) );
+                if (images.length > target)
+                    break;
             }
 
             return images;
@@ -222,21 +223,23 @@ export default {
             let { count, after } = this.stream;
 
             /**
-             * potential issue when api posts order changes;
-             * generator has no end
+             * potential issue when api posts order changes
              */
             const postGen = (async function*() {
-                console.log('requesting')
-                
-                const fetched = await subRef[orderFunct]({
-                    ...settings,
-                    ...(count && {count, after}),
-                    limit
-                })
-                count += limit;
-                after = fetched._query.after;
+                const MAX_TRIES = 5;
 
-                yield fetched;
+                for (let i=0; i<MAX_TRIES; ++i) {
+                    console.log('requesting')
+                    const fetched = await subRef[orderFunct]({
+                        ...settings,
+                        ...(count && {count, after}),
+                        limit
+                    });
+                    count += limit;
+                    after = fetched._query.after;
+
+                    yield fetched;
+                }
             })();
 
             const images = await this.fetchImages(postGen, {target});
@@ -249,7 +252,7 @@ export default {
                     this.cache.push( ...images.splice(cachePoint) );
                 }
 
-                this.stream = {count, after};
+                this.stream = {...this.stream, count, after};
                 this.redditPosts.push(...images);
 
             }, {runId});

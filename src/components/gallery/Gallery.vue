@@ -37,7 +37,7 @@ export default {
             loadInfo: {},
             loaded: 0,
             lookIdx: -1,
-            atBottom: true //true in case no scroll
+            atBottom: false
         }
     },
     props: {
@@ -84,6 +84,7 @@ export default {
     watch: {
         posts: {
             handler() {
+                this.scrollBottom();
                 this.lookIdx = -1;
                 this.updateLoads();
             },

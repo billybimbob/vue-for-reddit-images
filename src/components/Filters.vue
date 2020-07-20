@@ -18,7 +18,9 @@
 
         <form name="orderBy" @submit.prevent="setSubName">
             <input v-model="newsubname" @focus="clearSubname" placeholder="Enter subreddit name" class="searchTerm">
-            <button @click="setSubName" form="orderBy" type="submit" class="searchButton">Go</button>
+            <button @click="setSubName" form="orderBy" type="submit" class="searchButton">
+                <img :src="searchBlack"/>
+            </button>
         </form>
 
         <div class="checkboxes">
@@ -33,6 +35,8 @@
 
 
 <script>
+import searchBlack from '../assets/search-black.svg';
+
 export default {
     data() {
         return {
@@ -45,7 +49,8 @@ export default {
                 {name: 'controversial', timed: true},
                 {name: 'rising', timed: false}
             ],
-            times: ['hour', 'day', 'week', 'month', 'year', 'all']
+            times: ['hour', 'day', 'week', 'month', 'year', 'all'],
+            searchBlack
         };
     },
     props: {
@@ -116,6 +121,11 @@ export default {
     justify-content: space-between;
 }
 
+.filters form {
+    display: flex;
+    align-items: center;
+}
+
 .searchTerm {
     border: none;
     border-bottom: 2px solid #6f7887;
@@ -135,11 +145,9 @@ export default {
 }
 
 .searchButton {
-    height: 44px;
-    border: 0px solid #6f7887;
-    background: #6f7887;
-    color: #fff;
-    font-size: 20px;
+    background-color: transparent;
+    border: none;
+    margin-top: 8px;
 }
 
 .sortSelect {
@@ -153,11 +161,14 @@ export default {
 }
 
 .checkboxes {
-    margin-top: auto;
-    margin-bottom: auto;
+    margin: auto 0;
 }
 
 button {
-  cursor: pointer;
+    cursor: pointer;
+}
+
+button:focus {
+    outline: none;
 }
 </style>
