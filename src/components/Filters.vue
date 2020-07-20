@@ -17,18 +17,25 @@
         </div>
 
         <form name="orderBy" @submit.prevent="setSubName">
-            <input v-model="newsubname" @focus="clearSubname" placeholder="Enter subreddit name" class="searchTerm">
-            <button @click="setSubName" form="orderBy" type="submit" class="searchButton">
-                <img :src="searchBlack"/>
-            </button>
+            <input v-model="newsubname" placeholder="Enter subreddit name"
+                @focus.prevent="focusSearch" @blur.prevent="blurSearch"
+                :class="['searchTerm', {'searching': userIs.searching}]">
+
+            <img :src="svgs.searchBlack"  @click="setSubName"
+                :class="['searchButton', {'searching': userIs.searching}]"/>
         </form>
 
         <div class="checkboxes">
-            <input type="checkbox" id="autoload" :value="autoload" @change="autoChange"/>
-            <label for="autoload">Infinite Scroll</label>
+            <img :src="svgs.leftArrow" @click="revealChecks"
+                :class="['revealer', {'checking': userIs.checking}]"/>
 
-            <input type="checkbox" id="slideshow" :checked="slideshow" @change="showChange"/>
-            <label for="slideshow">Slideshow</label>
+            <div class="options" v-show="userIs.checking">
+                <input type="checkbox" id="autoload" :value="autoload" @change="autoChange"/>
+                <label for="autoload">Infinite Scroll</label>
+
+                <input type="checkbox" id="slideshow" :checked="slideshow" @change="showChange"/>
+                <label for="slideshow">Slideshow</label>
+            </div>
         </div>
     </div>
 </template>
@@ -36,12 +43,12 @@
 
 <script>
 import searchBlack from '../assets/search-black.svg';
+import leftArrow from '../assets/left-arrow.svg';
 
 export default {
     data() {
         return {
             newsubname: "",
-            entered: false,
             sortBy: [
                 {name: 'hot', timed: false},
                 {name: 'top', timed: true},
@@ -50,7 +57,15 @@ export default {
                 {name: 'rising', timed: false}
             ],
             times: ['hour', 'day', 'week', 'month', 'year', 'all'],
-            searchBlack
+            userIs: { //user action state
+                entered: false,
+                searching: false,
+                checking: false
+            },
+            svgs: {
+                leftArrow,
+                searchBlack
+            }
         };
     },
     props: {
@@ -82,14 +97,22 @@ export default {
     },
 
     methods: {
-        clearSubname() {
-            if (this.entered) {
+        focusSearch() {
+            if (this.userIs.entered) {
                 this.newsubname = "";
-                this.entered = false;
+                this.userIs.entered = false;
             }
+            this.userIs.searching = true;
         },
+        blurSearch() {
+            this.userIs.searching = false;
+        },
+
+        revealChecks() {
+            this.userIs.checking = !this.userIs.checking;
+        },
+
         orderChange(event) {
-            //console.log(event.target.value)
             this.$emit('update:order', event.target.value);
         },
         timeChange(event) {
@@ -99,7 +122,7 @@ export default {
             //console.log("old name: " + this.subreddit, " new name: " + this.newsubname);
             console.log(this.newsubname);
             this.$emit('update:subreddit', this.newsubname);
-            this.entered = true;
+            this.userIs.entered = true;
         },
         autoChange() {
             this.$emit('update:autoload', !this.autoload);
@@ -116,7 +139,7 @@ export default {
 .filters {
     width: 99%;
     font-size: 20px;
-    padding: 20px 0px;
+    padding: 15px 0px;
     display: inline-flex;
     justify-content: space-between;
 }
@@ -129,7 +152,7 @@ export default {
 .searchTerm {
     border: none;
     border-bottom: 2px solid #6f7887;
-    padding: 15px;
+    padding: 12px;
     padding-left: 4px;
     height: 8px;
     outline: none;
@@ -139,15 +162,22 @@ export default {
     transition: all 0.25s ease-in;
 }
 
-.searchTerm:focus {
-    transform: scale(1.02);
+.searchTerm.searching {
+    transform: scale(1.04);
     border-color: black;
 }
 
 .searchButton {
+    margin-top: 6px;
+    margin-left: 5px;
+    transition: transform 0.25s ease-in;
+    cursor: pointer;
     background-color: transparent;
     border: none;
-    margin-top: 8px;
+}
+
+.searchButton.searching {
+    transform: scale(1.2);
 }
 
 .sortSelect {
@@ -162,13 +192,26 @@ export default {
 
 .checkboxes {
     margin: auto 0;
+    display: flex;
 }
-
-button {
+.revealer {
+    transition: transform 0.25s ease-in;
     cursor: pointer;
+    background-color: transparent;
+    border: none;
+    height: 30px;
+    width: 30px;
 }
 
-button:focus {
-    outline: none;
+.revealer.checking {
+    transform: rotate(-180deg);
+}
+
+.checkboxes .options {
+    margin: auto 0;
+}
+
+.checkboxes .options label {
+    margin-right: 8px;
 }
 </style>

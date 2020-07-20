@@ -84,8 +84,10 @@ export default {
     watch: {
         posts: {
             handler() {
-                this.scrollBottom();
-                this.lookIdx = -1;
+                if (!this.isLoading) {
+                    this.scrollBottom();
+                    this.lookIdx = -1;
+                }
                 this.updateLoads();
             },
             immediate: true
@@ -161,7 +163,7 @@ export default {
         },
 
         scrollBottom() {
-            if ((window.innerHeight+window.scrollY) >= document.body.scrollHeight*0.95) {
+            if ((window.innerHeight+window.scrollY) >= document.body.scrollHeight*0.98) {
                 console.log('at bottom')
                 this.atBottom = true;
             } else {

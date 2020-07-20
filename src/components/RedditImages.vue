@@ -126,7 +126,7 @@ export default {
         defaultOptions: () => ({ //immutable
             limit: 10,
             time: 'any',
-            fetchmod: 10,
+            fetchmod: 40,
             slideshow: false,
             autoload: false
         }),
@@ -153,12 +153,10 @@ export default {
         },
 
         morePosts(moreAmnt) {
-            //increase fetch exponentially?
-            if (moreAmnt) {
-                this.$emit('update:limit', this.settings.limit + moreAmnt);
-            } else {
-                this.$emit('update:limit', this.settings.limit + this.fetchmod*2);
+            if (!moreAmnt) {
+                moreAmnt = this.fetchmod;
             }
+            this.$emit('update:limit', this.settings.limit + moreAmnt);
         },
 
         checkedChange(changeCallback, {runId}) {
@@ -226,7 +224,7 @@ export default {
              * potential issue when api posts order changes
              */
             const postGen = (async function*() {
-                const MAX_TRIES = 5;
+                const MAX_TRIES = 3;
 
                 for (let i=0; i<MAX_TRIES; ++i) {
                     console.log('requesting')
@@ -265,10 +263,11 @@ export default {
             this.isLoading = true;
             this.setPosts()
                 .then(() => {
+                    console.log('finished setting')
                     this.isLoading = false;
                 })
                 .catch(error => {
-                    console.log(`${error.name}: ${error.message}`)
+                    console.error(`${error.name}: ${error.message}`)
                     this.isLoading = false;
                 });
         }, 0, {leading: false});
