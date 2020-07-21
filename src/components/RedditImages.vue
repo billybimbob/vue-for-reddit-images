@@ -76,6 +76,7 @@ export default {
             delete normal.fetchmod;
             delete normal.slideshow;
             delete normal.autoload;
+
             return normal;
         },
         // to watch multiple prop vals
@@ -203,7 +204,6 @@ export default {
 
             if (target === 0) {
                 return;
-                
             } else if (target < 0) {
                 this.checkedChange(() => {
                     this.cache.unshift( ...this.redditPosts.splice(target) );
@@ -218,7 +218,7 @@ export default {
 
             const settings = this.settings;
             const limit = target + this.fetchmod;
-            let { count, after } = this.stream;
+            let {count, after} = this.stream;
 
             /**
              * potential issue when api posts order changes
@@ -246,7 +246,7 @@ export default {
             this.checkedChange(() => {
                 this.cache.splice(0); //clear cache
                 const cachePoint = target - images.length; //negative or zero
-                if (cachePoint) {
+                if (cachePoint < 0) {
                     this.cache.push( ...images.splice(cachePoint) );
                 }
 
@@ -267,7 +267,11 @@ export default {
                     this.isLoading = false;
                 })
                 .catch(error => {
-                    console.error(`${error.name}: ${error.message}`)
+                    if (error.name) //duck type
+                        console.error(`${error.name}: ${error.message}`)
+                    else
+                        console.error(`error: ${error}`);
+
                     this.isLoading = false;
                 });
         }, 0, {leading: false});

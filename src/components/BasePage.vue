@@ -43,17 +43,20 @@ export default {
 
 <style>
 header {
+  position: fixed;
+  top: 0;
+  left: 0;
   z-index: 2;
-  margin-left: 180px;
+  padding: 0;
+  padding-left: 180px;
   width: calc(100% - 180px);
-  box-shadow: 0 0 11px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar {
+  position: fixed;
   top: 0;
   left: 0;
   width: 180px;
-  position: fixed;
   z-index: 1;
   height: 100%;
   transition: transform 0.2s;
@@ -64,6 +67,7 @@ header {
 }
 
 main {
+  margin-top: 70px;
   margin-left: 180px;
   display: flex;
   flex-direction: column;

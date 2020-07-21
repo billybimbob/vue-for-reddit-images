@@ -39,7 +39,7 @@ export default {
 }
 
 .pin-sidebar a {
-  padding: 6px 8px 6px 16px;
+  padding: 0;
   text-decoration: none;
   font-size: 25px;
   color: #fff;

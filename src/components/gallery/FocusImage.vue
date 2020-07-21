@@ -194,7 +194,7 @@ export default {
 }
 
 .buttons .left {
-    left: 18%;
+    left: 18.5%;
 }
 
 .buttons .right {

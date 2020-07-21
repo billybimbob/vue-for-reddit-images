@@ -29,13 +29,20 @@
             <img :src="svgs.leftArrow" @click="revealChecks"
                 :class="['revealer', {'checking': userIs.checking}]"/>
 
-            <div class="options" v-show="userIs.checking">
-                <input type="checkbox" id="autoload" :value="autoload" @change="autoChange"/>
-                <label for="autoload">Infinite Scroll</label>
+            <transition name="slide">
+                <div v-show="userIs.checking" class="options">
+                    <div class="checkbox">
+                        <input type="checkbox" id="autoload" :value="autoload" @change="autoChange"/>
+                        <label for="autoload">Infinite Scroll</label>
+                    </div>
 
-                <input type="checkbox" id="slideshow" :checked="slideshow" @change="showChange"/>
-                <label for="slideshow">Slideshow</label>
-            </div>
+                    <div class="checkbox">
+                        <input type="checkbox" id="slideshow" :checked="slideshow" @change="showChange"/>
+                        <label for="slideshow">Slideshow</label>
+                    </div>
+                </div>
+            </transition>
+
         </div>
     </div>
 </template>
@@ -137,13 +144,37 @@ export default {
 
 <style scoped>
 .filters {
-    width: 99%;
+    width: 100%;
+    height: 100%;
     font-size: 20px;
-    padding: 15px 0px;
+    padding: 18px 0;
+    margin-right: 0;
     display: inline-flex;
     justify-content: space-between;
+    background-color: #fff; 
+    box-shadow: 0 0 11px rgba(0, 0, 0, 0.3);
 }
 
+/* select box */
+.selects {
+    margin-left: 10px;
+}
+
+.sortSelect {
+    background: #6f7887;
+    color: white;
+    font-size: 15px;
+    height: 35px;
+    margin-right: 8px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.sortSelect:focus {
+    outline: none;
+}
+
+/* search bar */
 .filters form {
     display: flex;
     align-items: center;
@@ -155,6 +186,7 @@ export default {
     padding: 12px;
     padding-left: 4px;
     height: 8px;
+    width: 300px;
     outline: none;
     color: #6f7887;
     background-color: transparent;
@@ -168,8 +200,8 @@ export default {
 }
 
 .searchButton {
-    margin-top: 6px;
-    margin-left: 5px;
+    margin-top: 5px;
+    margin-left: 7px;
     transition: transform 0.25s ease-in;
     cursor: pointer;
     background-color: transparent;
@@ -177,23 +209,15 @@ export default {
 }
 
 .searchButton.searching {
-    transform: scale(1.2);
+    transform: scale(1.4);
 }
 
-.sortSelect {
-    background: #6f7887;
-    color: white;
-    text-align: center;
-    bottom: 2px;
-    border: 0px solid #6f7887;
-    width: auto;
-    height: 44px;
-}
-
+/* checkboxes */
 .checkboxes {
-    margin: auto 0;
+    margin: auto 20px;
     display: flex;
 }
+
 .revealer {
     transition: transform 0.25s ease-in;
     cursor: pointer;
@@ -209,9 +233,25 @@ export default {
 
 .checkboxes .options {
     margin: auto 0;
+    display: flex;
 }
 
-.checkboxes .options label {
+.checkbox * {
+    cursor: pointer;
+}
+
+.checkbox label {
     margin-right: 8px;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+    transition: all .25s ease-in;
+}
+
+.slide-enter,
+.slide-leave-to {
+    opacity: 0;
+    transform: translateX(100%);
 }
 </style>
