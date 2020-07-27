@@ -23,7 +23,7 @@ export default {
                 images
                     .map(image => image.$el)
                     .map(el => (
-                        { el, info: this.getInfo(el) }))
+                        { el, info: this.nodeInfo(el) }))
                     .filter (({ info }) => !info.render)
                     .forEach(({ el }) => {
                         this.observer.observe(el);
@@ -41,11 +41,10 @@ export default {
             this.observer = new IntersectionObserver((entries, observer) => {
                 entries.forEach(entry => {
                     const intersect = entry.isIntersecting;
-                    const info = this.getInfo(entry.target);
+                    const info = this.nodeInfo(entry.target);
 
-                    if (!info) { //posts all change
+                    if (!info || (info && info.render)) { //posts all change
                         observer.unobserve(entry.target);
-                        //return;
                     } else if (intersect) {
                         info.render = true;
                         observer.unobserve(entry.target);

@@ -11,7 +11,7 @@
         />
 
         <FocusImage :slideshow="slideshow" :posts="posts"
-            :lookIdx.sync="index.look" @queueIndex="queueIndex"/>
+            :lookIdx="index.look" @queue="queueIndex"/>
 
         <LoadingIcon v-if="isLoading"/>
         <LoadMore v-else-if="posts.length!==0" v-on="$listeners"/>
@@ -39,7 +39,7 @@ export default {
             loaded: 0,
             index: {
                 look: -1,
-                queue: -1
+                queue: -2 //-2 means nothing queued
             },
             atBottom: false
         }
@@ -82,21 +82,23 @@ export default {
                 ...this.loadInfo[post.id]
             }));
         },
-        queueLoaded() {
-            /*console.log(this.posts.length, 'vs', this.index.queue)
-            console.log(this.index.queue!==-1
-                && this.posts.length > this.index.queue
-                && this.loadInfo[this.posts[this.index.queue].id]);*/
-
-            return this.index.queue!==-1
-                && this.posts.length > this.index.queue
-                && this.loadInfo[this.posts[this.index.queue].id].show;
-        },
         allLoaded() {
             return !this.isLoading
                 && this.autoload
                 && this.atBottom
                 && this.loaded===this.posts.length;
+        },
+
+        queueFetched() {
+            return this.index.queue >= 0
+                && !this.isLoading
+                && this.posts.length > this.index.queue
+                && this.posts[this.index.queue].id in this.loadInfo;
+        },
+        queueLoaded() {
+            const queueShown = () => this.indexInfo(this.index.queue).show;
+            return this.index.queue!==-2
+                && (this.index.queue===-1 || (this.queueFetched && queueShown()));
         }
     },
 
@@ -115,30 +117,34 @@ export default {
         },
         index: {
             handler() {
-                if (this.index.look===-1) {
-                    this.index.queue = -1;
+                if (this.index.look===-1 && this.index.queue!==-2) {
+                    this.index.queue = -2;
                 }
             },
             deep: true
-        },
-        isLoading() {
-            if (!this.isLoading && this.index.queue!==-1) {
-                //force render of queue
-
-            }
-        },
-        queueLoaded() {
-            if (this.queueLoaded) {
-                console.log('update from queue')
-                this.index.look = this.index.queue;
-                this.index.queue = -1;
-            }
-        },
+        }, 
         allLoaded() {
             // can emit to auto load more posts
             if (this.allLoaded) {
                 console.log('loaded all')
                 this.morePosts();
+            }
+        },
+
+        queueFetched() {
+            if (this.queueFetched) {
+                //force render of queue
+                const info = this.indexInfo(this.index.queue);
+                if (info.render===false) {
+                    info.render = true;
+                }
+            }
+        },
+        queueLoaded() {
+            if (this.queueLoaded) {
+                //console.log('update from queue to', this.index.queue)
+                this.index.look = this.index.queue;
+                this.index.queue = -2;
             }
         }
     },
@@ -146,9 +152,14 @@ export default {
     methods: {
         getImages() { return this.$refs.images.getImages(); },
 
-        getInfo(image) {
+        nodeInfo(image) {
             const id = this.$refs.images.getId(image);
             return this.loadInfo[id]; 
+        },
+
+        indexInfo(idx) {
+            const id = this.posts[idx].id;
+            return this.loadInfo[id];
         },
 
         morePosts() { this.$emit('moreposts') },
@@ -199,15 +210,20 @@ export default {
             this.loaded += 1;
         },
         imageClick({idx: imgIdx}) {
+            // don't have to queue since idx should already be loaded
             this.index.look = imgIdx;
         },
 
         queueIndex(queueIdx) {
-            if (this.index.queue===-1) {
+            if ( queueIdx===-1 && this.index.look!==-1
+              || queueIdx > -1 && this.index.queue===-2) {
+
                 this.index.queue = queueIdx;
-                console.log('queued')
             }
-            if (!this.isLoading) {
+
+            if ( this.index.queue >= 0
+              && !this.isLoading
+              && this.index.queue >= this.posts.length) {
                 this.morePosts();
             }
         },

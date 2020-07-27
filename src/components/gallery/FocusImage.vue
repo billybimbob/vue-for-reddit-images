@@ -89,7 +89,7 @@ export default {
                      //only run once
                     clearInterval(this.timer);
                     this.timer = null;
-                }, 2000);
+                }, 8000);
             }
         }
     },
@@ -97,21 +97,17 @@ export default {
     methods: {
         prevImage() {
             if (this.lookIdx>0) {
-                this.$emit("update:lookIdx", this.lookIdx-1);
+                this.$emit("queue", this.lookIdx-1);
             }
         },
         nextImage() {
-            if (this.lookIdx<this.posts.length-1) {
-                this.$emit("update:lookIdx", this.lookIdx+1);
-            } else if (this.slideshow) {
-                this.$emit("queueIndex", this.lookIdx+1);
-            }
+            this.$emit("queue", this.lookIdx+1);
         },
         clearFocus() {
             this.trans = "appear";
             //not sure why nextTick only for this one
             this.$nextTick(() => {
-                this.$emit("update:lookIdx", -1);
+                this.$emit("queue", -1);
             })
         },
         arrowKey(event) {

@@ -127,7 +127,7 @@ export default {
         defaultOptions: () => ({ //immutable
             limit: 10,
             time: 'any',
-            fetchmod: 30,
+            fetchmod: 20,
             slideshow: false,
             autoload: false
         }),
