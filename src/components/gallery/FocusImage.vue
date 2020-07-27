@@ -76,11 +76,20 @@ export default {
             }
         },
         focused() {
-            if (this.timer!==null) {
+            if (this.timer) {
                 clearInterval(this.timer);
             }
+
+            //start timer only when focus updated
             if (this.slideshow && this.focused!==null) {
-                this.timer = setInterval(this.nextImage, 10000);
+                this.timer = setInterval(() => {
+                    console.log('timer fire')
+                    this.nextImage();
+
+                     //only run once
+                    clearInterval(this.timer);
+                    this.timer = null;
+                }, 2000);
             }
         }
     },
@@ -94,6 +103,8 @@ export default {
         nextImage() {
             if (this.lookIdx<this.posts.length-1) {
                 this.$emit("update:lookIdx", this.lookIdx+1);
+            } else if (this.slideshow) {
+                this.$emit("queueIndex", this.lookIdx+1);
             }
         },
         clearFocus() {
@@ -113,7 +124,7 @@ export default {
                         this.nextImage();
                         break;
                     case 'Escape':
-                        this.clearFocus(event);
+                        this.clearFocus();
                         break;
                     default:
                         break;

@@ -6,12 +6,12 @@
 
         <!--tight coupling between Images and Gallery-->
         <Images ref="images" 
-            :posts="loadPosts" :lookIdx="lookIdx"
+            :posts="loadPosts" :lookIdx="index.look"
             @click="imageClick" @load="imageLoad"
         />
 
         <FocusImage :slideshow="slideshow" :posts="posts"
-            :lookIdx.sync="lookIdx"/>
+            :lookIdx.sync="index.look" @queueIndex="queueIndex"/>
 
         <LoadingIcon v-if="isLoading"/>
         <LoadMore v-else-if="posts.length!==0" v-on="$listeners"/>
@@ -35,8 +35,12 @@ export default {
     data() {
         return {
             loadInfo: {},
+            newImages: 0,
             loaded: 0,
-            lookIdx: -1,
+            index: {
+                look: -1,
+                queue: -1
+            },
             atBottom: false
         }
     },
@@ -69,36 +73,70 @@ export default {
         }
     },
     computed: {
+        allNewPosts() {
+            return this.posts.length===this.newImages;
+        },
         loadPosts() {
             return this.posts.map(post => ({
                 ...post,
                 ...this.loadInfo[post.id]
             }));
         },
-        autoProps() {
-            const {loaded, autoload, atBottom} = this;
-            return {loaded, autoload, atBottom};
+        queueLoaded() {
+            /*console.log(this.posts.length, 'vs', this.index.queue)
+            console.log(this.index.queue!==-1
+                && this.posts.length > this.index.queue
+                && this.loadInfo[this.posts[this.index.queue].id]);*/
+
+            return this.index.queue!==-1
+                && this.posts.length > this.index.queue
+                && this.loadInfo[this.posts[this.index.queue].id].show;
+        },
+        allLoaded() {
+            return !this.isLoading
+                && this.autoload
+                && this.atBottom
+                && this.loaded===this.posts.length;
         }
     },
 
     watch: {
+        allNewPosts() {
+            if (this.allNewPosts) {
+                this.scrollBottom();
+                this.index.look = -1;
+            }
+        },
         posts: {
             handler() {
-                if (!this.isLoading) {
-                    this.scrollBottom();
-                    this.lookIdx = -1;
-                }
                 this.updateLoads();
             },
             immediate: true
         },
-        autoProps() {
-            // can emit to auto load more posts
-            if (!this.isLoading
-              && this.autoload
-              && this.atBottom
-              && this.loaded===this.posts.length) {
+        index: {
+            handler() {
+                if (this.index.look===-1) {
+                    this.index.queue = -1;
+                }
+            },
+            deep: true
+        },
+        isLoading() {
+            if (!this.isLoading && this.index.queue!==-1) {
+                //force render of queue
 
+            }
+        },
+        queueLoaded() {
+            if (this.queueLoaded) {
+                console.log('update from queue')
+                this.index.look = this.index.queue;
+                this.index.queue = -1;
+            }
+        },
+        allLoaded() {
+            // can emit to auto load more posts
+            if (this.allLoaded) {
                 console.log('loaded all')
                 this.morePosts();
             }
@@ -143,7 +181,8 @@ export default {
                 }
             }, this.loadInfo);
             
-            this.loaded = this.posts.length - newImages;
+            this.newImages = newImages; //could update directly?
+            this.loaded = this.posts.length - this.newImages;
         },
 
 
@@ -156,10 +195,21 @@ export default {
             // image only shown after being loaded and styled
             info.style = {[boundDim]: '100%'};
             info.show = true;
+            //console.log('loaded', idx);
             this.loaded += 1;
         },
         imageClick({idx: imgIdx}) {
-            this.lookIdx = imgIdx;
+            this.index.look = imgIdx;
+        },
+
+        queueIndex(queueIdx) {
+            if (this.index.queue===-1) {
+                this.index.queue = queueIdx;
+                console.log('queued')
+            }
+            if (!this.isLoading) {
+                this.morePosts();
+            }
         },
 
         scrollBottom() {
