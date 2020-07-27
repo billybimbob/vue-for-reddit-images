@@ -47,7 +47,6 @@ export default {
     overflow: hidden;
 }
 
-.small-tile.visible:focus-within,
 .small-tile.visible:hover  {
     box-shadow: 0 0 25px black;
     transform: scale(1.1);

@@ -1,33 +1,36 @@
 <template>
-    <div class="focus">
-        <transition :name="trans">
-            <div v-if="focused" class="center" :key="focused.url">
-                <div class="scroll-box">
-                    <a :href="focused.url" target="_blank" @click.stop>
-                        <h2>{{ focused.title }}</h2>
-                    </a>
+    <transition name="fade">
+        <div v-show="focused" :class="['focus', {'slideshow': slideshow}]">
+            <transition :name="trans">
+                <div v-if="focused" :key="focused.url" class="center">
+                    <div v-if="slideshow">
+                        <!--a :href="focused.url" target="_blank" @click.stop-->
+                        <input type="image" :src="focused.img" :alt="focused.title"/>
+                        <!--/a-->
+                    </div>
 
-                    <input type="image" :src="focused.img" :alt="focused.title"/>
-                    <br/>
-                    <a :href="focused.img" :download="focused.title">
-                        <button type="submit">Download Image</button>
-                    </a>
+                    <div v-else class="scroll-box">
+                        <a :href="focused.url" target="_blank" @click.stop>
+                            <h2>{{ focused.title }}</h2>
+                        </a>
+
+                        <input type="image" :src="focused.img" :alt="focused.title"/>
+                        <!--br/>
+                        <a :href="focused.img" :download="focused.title">
+                            <button type="submit">Download Image</button>
+                        </a-->
+                    </div>
                 </div>
+            </transition>
+
+            <div v-show="focused && !slideshow" class="buttons">
+                <img v-if="lookIdx>0"
+                    class="left" @click.stop="prevImage" :src="left"/>
+                <img v-if="lookIdx<posts.length-1"
+                    class="right" @click.stop="nextImage" :src="right"/>
             </div>
-        </transition>
-        <transition name="fade">
-            <div v-if="focused" class="buttons">
-                <transition name="fade" appear>
-                    <img v-if="lookIdx>0"
-                        class="left" @click.stop="prevImage" :src="left"/>
-                </transition>
-                <transition name="fade" appear> <!--transition not working-->
-                    <img v-if="lookIdx<posts.length-1"
-                        class="right" @click.stop="nextImage" :src="right"/>
-                </transition>
-            </div>
-        </transition>
-    </div>
+        </div>
+    </transition>
 </template>
 
 
@@ -67,7 +70,7 @@ export default {
     },
     watch: {
         lookIdx(currIdx, prevIdx) {
-            if (currIdx!==-1 && prevIdx!==-1) {
+            if (currIdx!==-1 && prevIdx!==-1 && !this.slideshow) {
                 this.trans = prevIdx > currIdx
                     ? "from-left" : "from-right";
             }
@@ -93,18 +96,12 @@ export default {
                 this.$emit("update:lookIdx", this.lookIdx+1);
             }
         },
-        clearFocus(event) {
+        clearFocus() {
             this.trans = "appear";
             //not sure why nextTick only for this one
             this.$nextTick(() => {
                 this.$emit("update:lookIdx", -1);
-            });
-
-            const targ = event.target;
-            //not great
-            if (targ && this.$parent.$el.contains(targ)) {
-                targ.blur();
-            }
+            })
         },
         arrowKey(event) {
             if (this.focused) {
@@ -140,21 +137,47 @@ export default {
 
 
 <style scoped>
+.focus {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 3;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.focus.slideshow {
+    background-color: black;
+}
+
 .center {
     position: fixed;
     top: 50%;
     left: 55%;
     transform: translate(-50%, -50%);
+    z-index: 3;
     background: white;
-    z-index: 2;
     margin: 0;
     padding: 0;
     box-shadow: 0 0 25px black;
     border-radius: 6px;
+    opacity: 100%;
+}
+
+.slideshow .center {
+    background: transparent;
+    height: 100%;
+    width: 100%;
+    left: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .scroll-box {
     overflow-y: scroll;
+    max-width: 90vw;
     max-height: 95vh;
     display: block;
 }
@@ -164,15 +187,26 @@ export default {
     padding: 10px;
 }
 
+.center a {
+    text-decoration: none;
+    color: black;
+    cursor: pointer;
+}
+
 .center input {
-    max-width: 70vw;
-    max-height: 80vh;
     vertical-align: top;
+    max-height: 80vh;
+    max-width: 80vw;
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
 }
 
-.center input:center {
+.slideshow .center input {
+    max-height: 100vh;
+    max-width: 100vw;
+}
+
+.center input:focus {
     outline: none;
 }
 
